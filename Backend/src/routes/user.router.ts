@@ -1,47 +1,45 @@
 import { Router } from 'express';
-import { registerUser} from '../controller/user.controller';
-import { protect, restrictTo } from '../middleware/auth.middleware';
-import { validateUser } from '../middleware/validate.user';
+import {
+  registerUser, loginUser, getUserDashboard,
+  uploadProfilePicture, getUserStreak, getUserXP,
+  markResourceCompleted, generateTutorResponse,
+  startTeachingSession, getGamifyStats,
+  getHabitStats, getAllResources, getResourceById,
+  getTopStreakUsers, logoutUser, getUserProfile, updateUserProfile,
+  saveTutorResponse, rateTutorResponse, markSessionUnderstood, getFlashcardsByTopic
+} from '../controller/user.controller';
+
 import { apiLimiter } from '../middleware/ratelimit.middleware';
+import { protect, restrictTo } from '../middleware/auth.middleware';
+import { upload } from '../middleware/upload.middleware';
+import { validateUser } from '../middleware/validate.user';
 
-const userRoutes = Router();
+const router = Router();
 
+router.post('/signup', apiLimiter, validateUser, registerUser);
+router.post('/login', apiLimiter, loginUser);
+router.post('/logout', protect, logoutUser);
 
-/**
- * @swagger
- * tags:
- *   name: User
- *   description: User related endpoints
- */
+router.use(protect);
+router.use(restrictTo('user'));
 
-userRoutes.post('/signup', apiLimiter, validateUser, registerUser);
-/**
- * @swagger
- * /user/signup:
- *   post:
- *     summary: Register a new user or admin
- *     description: |
- *       Registers a new user. The first 3 registered users are automatically assigned the role 'ADMIN'. All subsequent users are assigned the role 'USER'.
- *       Both admins and users use this endpoint to sign up.
- *     tags: [User]
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             properties:
- *               username:
- *                 type: string
- *               name:
- *                 type: string
- *               email:
- *                 type: string
- *               password:
- *                 type: string
- *     responses:
- *       201:
- *         description: User registered successfully (role will be 'ADMIN' for first 3, 'USER' for others)
- */
+router.get('/dashboard', getUserDashboard);
+router.put('/profile-picture', upload.single('file'), uploadProfilePicture);
+router.get('/streak', getUserStreak);
+router.get('/xp', getUserXP);
+router.post('/mark-completed/:resourceId', markResourceCompleted);
+router.post('/ai-tutor', generateTutorResponse);
+router.post('/ai-tutor/save', protect, saveTutorResponse);
+router.post('/ai-tutor/rate', protect, rateTutorResponse);
+router.post('/ai-tutor/understood', protect, markSessionUnderstood);
+router.post('/ai-student-mode', startTeachingSession);
+router.get('/gamify', getGamifyStats);
+router.get('/habit', getHabitStats);
+router.get('/resources', getAllResources);
+router.get('/resource/:id', getResourceById);
+router.get('/honour-board', getTopStreakUsers);
+router.get('/profile', protect, getUserProfile);
+router.put('/profile', protect, upload.single('profilePicture'), updateUserProfile);
+router.get('/ai-tutor/flashcards', protect, restrictTo('user'), getFlashcardsByTopic);
 
-export default userRoutes;
+export default router;
