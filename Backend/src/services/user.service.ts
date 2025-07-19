@@ -1,5 +1,5 @@
 import bcrypt from 'bcryptjs';
-import prisma from '../connect/prisma ';
+import prisma from '../connect/prisma';
 import { createAccessToken } from '../jwt/token';
 import { uploadToCloudinary } from '../utils/cloudinary'; // optional if using cloud
 import { validateEmail, validatePasswordStrength } from '../utils/validators';

@@ -90,6 +90,15 @@ model TutorResponseRating {
   createdAt  DateTime @default(now())
 }
 
+model Notice {
+  id          String   @id @default(uuid())
+  title       String
+  description String
+  fileUrl     String
+  uploadedBy  String
+  createdAt   DateTime @default(now())
+}
+
 enum Role {
   USER
   ADMIN

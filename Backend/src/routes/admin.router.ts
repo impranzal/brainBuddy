@@ -3,7 +3,7 @@ import {
   uploadAdminPicture,
   uploadResource, deleteResource, getAllResources,
   getAllUsers, getUserProgressReport,
-  getTopStreakUsers, logoutAdmin, getAdminProfile, getAdminHonourBoard
+  getTopStreakUsers, logoutAdmin, getAdminProfile, getAdminHonourBoard, uploadNotice
 } from '../controller/admin.controller';
 
 import { apiLimiter } from '../middleware/ratelimit.middleware';
@@ -25,5 +25,6 @@ router.get('/users', getAllUsers);
 router.get('/progress/:userId', getUserProgressReport);
 router.get('/honour-board', protect, restrictTo('admin'), getAdminHonourBoard);
 router.get('/profile', protect, restrictTo('admin'), getAdminProfile);
+router.post('/upload-notice', upload.single('file'), uploadNotice);
 
 export default router;

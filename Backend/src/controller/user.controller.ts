@@ -4,6 +4,9 @@ import { AppError } from '../utils/appError';
 import { getUserProfileService } from '../services/user.service';
 import { updateUserProfileService } from '../services/user.service';
 import { generateTutorResponseService } from '../services/user.service';
+import { getAllNotices, getNoticeById } from '../services/notice.service';
+import path from 'path';
+import fs from 'fs';
 
 export const registerUser = async (req: Request, res: Response, next: NextFunction) => {
   try {
@@ -203,5 +206,35 @@ export const getFlashcardsByTopic = async (req: Request, res: Response, next: Ne
     res.status(200).json(result);
   } catch (error: any) {
     next(new AppError(error.message || 'Failed to get flashcards', 500));
+  }
+};
+
+export const getAllNoticesController = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const notices = await getAllNotices();
+    res.status(200).json({ notices });
+  } catch (error: any) {
+    next(new AppError(error.message || 'Failed to fetch notices', 500));
+  }
+};
+
+export const getNoticeByIdController = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const notice = await getNoticeById(req.params.id);
+    if (!notice) {
+      return next(new AppError('Notice not found', 404));
+    }
+    // Serve the file for download/view
+    const filePath = path.join(__dirname, '../../', notice.fileUrl);
+    if (!fs.existsSync(filePath)) {
+      return next(new AppError('File not found', 404));
+    }
+    res.download(filePath, err => {
+      if (err) {
+        next(new AppError('Error downloading file', 500));
+      }
+    });
+  } catch (error: any) {
+    next(new AppError(error.message || 'Failed to fetch notice', 500));
   }
 };
