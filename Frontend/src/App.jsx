@@ -24,9 +24,10 @@ import TechNewsPage from "./pages/TechNewsPage";
 import Navbar from "./components/Navbar";
 import Footer from "./components/Footer";
 import "./App.css";
-import AdminWrapper from "@/wrapppers/admin-wrapper";
 import OpenRoutes from "./wrapppers/open-wrapper";
 import UserLayout from "./wrapppers/user-layout";
+import UserWrapper from "./wrapppers/user-wrapper";
+import AdminWrapper from "./wrapppers/admin-wrapper";
 
 const ResourceLibraryPage = () => (
   <div className="min-h-screen flex items-center justify-center text-2xl">
@@ -47,9 +48,9 @@ function App() {
             <Route path="*" element={<Navigate to="/login" replace />} />
           </Route>
 
-          {/* Protected Routes */}
+          {/* Protected Routes for User*/}
           <Route element={<UserLayout />}>
-            <Route element={<AdminWrapper />}>
+            <Route element={<UserWrapper />}>
               <Route path="/profile" element={<UserDashboard />} />
               <Route path="/dashboard" element={<Homepage />} />
               <Route path="/ai-tutor" element={<AITutorPage />} />
@@ -68,6 +69,11 @@ function App() {
               <Route path="/notice-board" element={<NoticeBoardPage />} />
               <Route path="/tech-news" element={<TechNewsPage />} />
             </Route>
+          </Route>
+
+          {/* protected routes for Admin */}
+          <Route element={<AdminWrapper />}>
+            <Route path={"/admin-dashboard"} element={<AdminDashboard />} />
           </Route>
         </Routes>
       </div>

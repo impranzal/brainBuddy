@@ -39,7 +39,8 @@ export const AuthProvider = ({ children }) => {
       if (result.token) {
         localStorage.setItem('brainbuddy_token', result.token);
         setUser(result.user);
-        return { success: true, user: result.user };
+        console.log(result.user.role)
+        return { success: true, user: result.user.role };
       } else {
         return { success: false, error: result.error || 'Login failed' };
       }

@@ -1,7 +1,7 @@
 // Central API service for BrainBuddy frontend
 // Handles all backend HTTP requests and JWT token management
 
-const API_BASE = 'http://localhost:5000/api'; // Updated to match Swagger base URL
+const API_BASE = 'http://localhost:8000/api'; // Updated to match Swagger base URL
 
 // Helper to get JWT token from localStorage
 function getToken() {

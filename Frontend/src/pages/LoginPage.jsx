@@ -1,57 +1,64 @@
-import React, { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
-import { useAuth } from '../contexts/AuthContext';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Brain, User, Lock, Eye, EyeOff, Mail } from 'lucide-react';
+import React, { useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
+import { useAuth } from "../contexts/AuthContext";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Brain, User, Lock, Eye, EyeOff, Mail } from "lucide-react";
 
 const LoginPage = () => {
   const [formData, setFormData] = useState({
-    email: '',
-    password: ''
+    email: "",
+    password: "",
   });
   const [showPassword, setShowPassword] = useState(false);
-  const [error, setError] = useState('');
+  const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
-  
+
   const { login } = useAuth();
   const navigate = useNavigate();
 
   const handleChange = (e) => {
     setFormData({
       ...formData,
-      [e.target.name]: e.target.value
+      [e.target.name]: e.target.value,
     });
-    setError('');
+    setError("");
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
-    setError('');
+    setError("");
 
     if (!formData.email || !formData.password) {
-      setError('Please fill in all fields');
+      setError("Please fill in all fields");
       setLoading(false);
       return;
     }
 
     const result = await login(formData);
-    
+    console.log(result);
+
     if (result.success) {
       // Role-based redirect
-      if (result.user.role && result.user.role.toUpperCase() === 'ADMIN') {
-        navigate('/admin-dashboard');
+      if (result.user && result.user.toUpperCase() === "ADMIN") {
+        navigate("/admin-dashboard");
       } else {
-        navigate('/homepage');
+        navigate("/profile");
       }
     } else {
       setError(result.error);
     }
-    
+
     setLoading(false);
   };
 
@@ -75,7 +82,7 @@ const LoginPage = () => {
                 <AlertDescription>{error}</AlertDescription>
               </Alert>
             )}
-            
+
             <div className="space-y-2">
               <Label htmlFor="email">Email</Label>
               <div className="relative">
@@ -110,22 +117,27 @@ const LoginPage = () => {
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-3 text-gray-400 hover:text-gray-600"
-                >
-                  {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                  className="absolute right-3 top-3 text-gray-400 hover:text-gray-600">
+                  {showPassword ? (
+                    <EyeOff className="h-4 w-4" />
+                  ) : (
+                    <Eye className="h-4 w-4" />
+                  )}
                 </button>
               </div>
             </div>
 
             <Button type="submit" className="w-full" disabled={loading}>
-              {loading ? 'Signing In...' : 'Sign In'}
+              {loading ? "Signing In..." : "Sign In"}
             </Button>
           </form>
 
           <div className="mt-6 text-center">
             <p className="text-sm text-gray-600">
-              Don't have an account?{' '}
-              <Link to="/signup" className="text-blue-600 hover:underline font-medium">
+              Don't have an account?{" "}
+              <Link
+                to="/signup"
+                className="text-blue-600 hover:underline font-medium">
                 Create one
               </Link>
             </p>
@@ -143,4 +155,3 @@ const LoginPage = () => {
 };
 
 export default LoginPage;
-
