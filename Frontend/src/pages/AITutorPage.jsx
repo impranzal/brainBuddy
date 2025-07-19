@@ -31,6 +31,94 @@ import {
 } from 'lucide-react';
 import * as api from '../services/api';
 import toast from "react-hot-toast";
+import { GEMINI_API_KEY, GEMINI_MODEL } from '../config/api';
+
+// Direct Gemini API integration
+const callGeminiAPI = async (prompt, setLoadingMessage = null) => {
+  // Debug: Log the API key (first few characters for security)
+  console.log('API Key check:', GEMINI_API_KEY ? `${GEMINI_API_KEY.substring(0, 10)}...` : 'undefined');
+  
+  // Check if API key is properly set
+  if (!GEMINI_API_KEY) {
+    console.error('API Key is undefined or null');
+    throw new Error('Gemini API key not configured. Please set your API key in src/config/api.js');
+  }
+  
+  if (GEMINI_API_KEY === 'YOUR_ACTUAL_GEMINI_API_KEY_HERE') {
+    console.error('API Key is still the placeholder value');
+    throw new Error('Gemini API key not configured. Please set your API key in src/config/api.js');
+  }
+  
+  if (GEMINI_API_KEY.length < 10) {
+    console.error('API Key seems too short');
+    throw new Error('Gemini API key appears to be invalid. Please check your API key in src/config/api.js');
+  }
+
+  console.log('API Key validation passed. Proceeding with request...');
+
+  const maxRetries = 3;
+  let retryCount = 0;
+
+  while (retryCount < maxRetries) {
+    try {
+      console.log('Making API request to Gemini...');
+      const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${GEMINI_API_KEY}`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          contents: [{ parts: [{ text: prompt }] }]
+        })
+      });
+
+      console.log('Response status:', response.status);
+      console.log('Response ok:', response.ok);
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        console.error('Gemini API error details:', errorData);
+        
+        if (response.status === 400) {
+          throw new Error('Invalid API key or request format');
+        } else if (response.status === 403) {
+          throw new Error('API key not authorized or quota exceeded');
+        } else if (response.status === 429) {
+          // Rate limit exceeded - wait and retry
+          retryCount++;
+          if (retryCount < maxRetries) {
+            const waitTime = Math.pow(2, retryCount) * 1000; // Exponential backoff: 2s, 4s, 8s
+            console.log(`Rate limit hit. Waiting ${waitTime/1000}s before retry ${retryCount}/${maxRetries}...`);
+            // Update loading message to show retry status
+            if (setLoadingMessage) {
+              setLoadingMessage(`Rate limit hit. Retrying in ${waitTime/1000}s... (${retryCount}/${maxRetries})`);
+            }
+            await new Promise(resolve => setTimeout(resolve, waitTime));
+            continue;
+          } else {
+            throw new Error('Rate limit exceeded. Please wait a minute and try again.');
+          }
+        } else {
+          throw new Error(`Gemini API error: ${errorData.error?.message || response.statusText}`);
+        }
+      }
+
+      console.log('Parsing response...');
+      const data = await response.json();
+      console.log('Response data:', data);
+      return data.candidates?.[0]?.content?.parts?.[0]?.text || 'No response from Gemini';
+    } catch (error) {
+      console.error('Gemini API error:', error);
+      if (error.message.includes('API key')) {
+        throw new Error('Please configure your Gemini API key in src/config/api.js. Get one from https://makersuite.google.com/app/apikey');
+      }
+      if (error.message.includes('Rate limit')) {
+        throw error; // Re-throw rate limit errors
+      }
+      throw new Error('Failed to get AI response. Please check your internet connection and try again.');
+    }
+  }
+};
 
 const AITutorPage = () => {
   const { user, updateUser } = useAuth();
@@ -43,24 +131,155 @@ const AITutorPage = () => {
   const [currentCard, setCurrentCard] = useState(0);
   const [showAnswer, setShowAnswer] = useState(false);
   const [error, setError] = useState('');
+  const [loadingMessage, setLoadingMessage] = useState('');
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!topic.trim()) return;
     setLoading(true);
+    setLoadingMessage('Generating AI response...');
     setError('');
+    
     try {
-      const res = await api.aiTutor({ topic, mode });
-      setResponse(res.response || res);
-      // Fetch flashcards from dedicated endpoint
-      const flashRes = await api.getFlashcardsByTopic(topic);
-      setFlashcards(flashRes.flashcards || []);
+      // Create prompt based on mode
+      let prompt = '';
+      switch (mode) {
+        case 'quick':
+          prompt = `Provide a concise explanation of "${topic}" in 2-3 paragraphs. Focus on key concepts and practical applications.`;
+          break;
+        case 'deep':
+          prompt = `Provide a comprehensive, detailed explanation of "${topic}". Include theoretical background, practical examples, and advanced concepts. Make it suitable for advanced learners.`;
+          break;
+        case 'step':
+          prompt = `Explain "${topic}" step-by-step, breaking down complex concepts into simple, digestible parts. Include examples for each step and practical applications.`;
+          break;
+        default:
+          prompt = `Explain the topic "${topic}" in a clear and engaging way.`;
+      }
+
+      // Add flashcard generation to the prompt
+      prompt += `\n\nAlso, generate 5 flashcard questions for this topic. 
+
+IMPORTANT: Respond ONLY with a valid JSON object. Do not include any text before or after the JSON. The JSON must be properly formatted with this exact structure:
+
+{
+  "explanation": "Your detailed explanation here...",
+  "flashcards": [
+    {
+      "question": "Question 1?",
+      "answer": "Answer 1"
+    },
+    {
+      "question": "Question 2?",
+      "answer": "Answer 2"
+    },
+    {
+      "question": "Question 3?",
+      "answer": "Answer 3"
+    },
+    {
+      "question": "Question 4?",
+      "answer": "Answer 4"
+    },
+    {
+      "question": "Question 5?",
+      "answer": "Answer 5"
+    }
+  ]
+}`;
+
+      const aiResponse = await callGeminiAPI(prompt, setLoadingMessage);
+
+      // Try to parse JSON response
+      let explanation = '';
+      let flashcards = [];
+
+      try {
+        let jsonText = aiResponse;
+        console.log('Raw AI response:', jsonText);
+        
+        // Remove code block markers if present
+        if (jsonText.startsWith('```json')) {
+          jsonText = jsonText.replace(/^```json/, '').replace(/```$/, '').trim();
+        } else if (jsonText.startsWith('```')) {
+          jsonText = jsonText.replace(/^```/, '').replace(/```$/, '').trim();
+        }
+
+        // Try to extract JSON from the response
+        const firstBrace = jsonText.indexOf('{');
+        const lastBrace = jsonText.lastIndexOf('}');
+        
+        if (firstBrace !== -1 && lastBrace !== -1) {
+          jsonText = jsonText.substring(firstBrace, lastBrace + 1);
+          console.log('Extracted JSON text:', jsonText);
+        }
+
+        const parsed = JSON.parse(jsonText);
+        console.log('Parsed JSON:', parsed);
+        
+        explanation = parsed.explanation || aiResponse;
+        flashcards = parsed.flashcards || [];
+        
+        // Ensure flashcards have the correct structure
+        if (Array.isArray(flashcards)) {
+          flashcards = flashcards.map(card => {
+            if (typeof card === 'string') {
+              return { question: card, answer: '' };
+            }
+            return {
+              question: card.question || card,
+              answer: card.answer || ''
+            };
+          });
+        }
+      } catch (e) {
+        console.error('JSON parsing error:', e);
+        console.error('Failed to parse JSON. Using raw response as explanation.');
+        
+        // If not valid JSON, use the raw response as explanation
+        explanation = aiResponse;
+        flashcards = [];
+        
+        // Try to extract some basic flashcards from the text
+        const lines = aiResponse.split('\n');
+        const extractedFlashcards = [];
+        
+        for (let i = 0; i < lines.length; i++) {
+          const line = lines[i].trim();
+          if (line.includes('?') && line.length > 10) {
+            // This might be a question
+            const nextLine = lines[i + 1]?.trim();
+            if (nextLine && nextLine.length > 5) {
+              extractedFlashcards.push({
+                question: line,
+                answer: nextLine
+              });
+              i++; // Skip the next line since we used it as answer
+            } else {
+              extractedFlashcards.push({
+                question: line,
+                answer: 'Answer not provided'
+              });
+            }
+            
+            if (extractedFlashcards.length >= 5) break;
+          }
+        }
+        
+        if (extractedFlashcards.length > 0) {
+          flashcards = extractedFlashcards;
+        }
+      }
+
+      setResponse({ content: explanation, title: `${topic} - ${mode} mode` });
+      setFlashcards(flashcards);
       setCurrentCard(0);
       setShowAnswer(false);
     } catch (err) {
       setError(err.message || 'Failed to get AI response');
     }
     setLoading(false);
+    setLoadingMessage('');
   };
 
   const handleSaveResponse = async () => {
@@ -152,7 +371,7 @@ const AITutorPage = () => {
                 </RadioGroup>
               </div>
               <Button type="submit" className="w-full" disabled={loading}>
-                {loading ? 'Generating...' : 'Get AI Explanation'}
+                {loading ? loadingMessage || 'Generating...' : 'Get AI Explanation'}
               </Button>
               {error && <div className="text-red-500 text-sm mt-2">{error}</div>}
             </form>

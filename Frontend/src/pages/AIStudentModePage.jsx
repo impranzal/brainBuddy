@@ -21,6 +21,68 @@ import {
   TrendingUp
 } from 'lucide-react';
 import * as api from '../services/api';
+import { GEMINI_API_KEY, GEMINI_MODEL } from '../config/api';
+
+// Direct Gemini API integration
+const callGeminiAPI = async (prompt) => {
+  // Check if API key is properly set
+  if (!GEMINI_API_KEY || GEMINI_API_KEY === 'YOUR_ACTUAL_GEMINI_API_KEY_HERE') {
+    throw new Error('Gemini API key not configured. Please set your API key in src/config/api.js');
+  }
+
+  const maxRetries = 3;
+  let retryCount = 0;
+
+  while (retryCount < maxRetries) {
+    try {
+      const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${GEMINI_API_KEY}`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          contents: [{ parts: [{ text: prompt }] }]
+        })
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        console.error('Gemini API error details:', errorData);
+        
+        if (response.status === 400) {
+          throw new Error('Invalid API key or request format');
+        } else if (response.status === 403) {
+          throw new Error('API key not authorized or quota exceeded');
+        } else if (response.status === 429) {
+          // Rate limit exceeded - wait and retry
+          retryCount++;
+          if (retryCount < maxRetries) {
+            const waitTime = Math.pow(2, retryCount) * 1000; // Exponential backoff: 2s, 4s, 8s
+            console.log(`Rate limit hit. Waiting ${waitTime/1000}s before retry ${retryCount}/${maxRetries}...`);
+            await new Promise(resolve => setTimeout(resolve, waitTime));
+            continue;
+          } else {
+            throw new Error('Rate limit exceeded. Please wait a minute and try again.');
+          }
+        } else {
+          throw new Error(`Gemini API error: ${errorData.error?.message || response.statusText}`);
+        }
+      }
+
+      const data = await response.json();
+      return data.candidates?.[0]?.content?.parts?.[0]?.text || 'No response from Gemini';
+    } catch (error) {
+      console.error('Gemini API error:', error);
+      if (error.message.includes('API key')) {
+        throw new Error('Please configure your Gemini API key in src/config/api.js. Get one from https://makersuite.google.com/app/apikey');
+      }
+      if (error.message.includes('Rate limit')) {
+        throw error; // Re-throw rate limit errors
+      }
+      throw new Error('Failed to get AI feedback. Please check your internet connection and try again.');
+    }
+  }
+};
 
 const AIStudentModePage = () => {
   const { user, updateUser } = useAuth();
@@ -40,12 +102,71 @@ const AIStudentModePage = () => {
     setLoading(true);
     setError('');
     setCurrentStep('conversation');
+    
     try {
-      const res = await api.aiStudentMode({ topic, explanation });
-      setAIFeedback(res);
+      const prompt = `
+A student provided the following explanation about "${topic}": "${explanation}".
+
+Please analyze this explanation and provide:
+
+1. Constructive feedback on correctness, clarity, and completeness
+2. An improved version of the answer
+3. A score out of 100
+4. XP points to award (0-20) based on quality
+
+Respond ONLY with a valid JSON object in this exact format:
+{
+  "feedback": "Your detailed feedback here...",
+  "improved": "The improved answer here...",
+  "score": 85,
+  "xp": 15
+}
+`;
+
+      const aiResponse = await callGeminiAPI(prompt);
+
+      // Try to parse JSON response
+      let feedback = '', improved = '', score = 0, xpEarned = 0;
+      
+      try {
+        let jsonText = aiResponse;
+        // Remove code block markers if present
+        if (jsonText.startsWith('```json')) {
+          jsonText = jsonText.replace(/^```json/, '').replace(/```$/, '').trim();
+        } else if (jsonText.startsWith('```')) {
+          jsonText = jsonText.replace(/^```/, '').replace(/```$/, '').trim();
+        }
+
+        // Extract JSON from response
+        const firstBrace = jsonText.indexOf('{');
+        const lastBrace = jsonText.lastIndexOf('}');
+        if (firstBrace !== -1 && lastBrace !== -1) {
+          jsonText = jsonText.substring(firstBrace, lastBrace + 1);
+        }
+
+        const parsed = JSON.parse(jsonText);
+        feedback = parsed.feedback || 'AI could not provide specific feedback.';
+        improved = parsed.improved || 'AI could not provide an improved version.';
+        score = parseInt(parsed.score) || 0;
+        xpEarned = parseInt(parsed.xp) || 0;
+        
+        // Validate score and XP ranges
+        score = Math.max(0, Math.min(100, score));
+        xpEarned = Math.max(0, Math.min(20, xpEarned));
+        
+      } catch (e) {
+        console.error('JSON parsing error:', e);
+        feedback = 'AI could not parse the response properly. Here is the raw response: ' + aiResponse;
+        improved = '';
+        score = 0;
+        xpEarned = 0;
+      }
+
+      const result = { feedback, improved, score, xp: xpEarned };
+      setAIFeedback(result);
       setConversation([
         { type: 'user', content: explanation, timestamp: new Date().toLocaleTimeString() },
-        { type: 'ai', content: res.feedback, timestamp: new Date().toLocaleTimeString() }
+        { type: 'ai', content: feedback, timestamp: new Date().toLocaleTimeString() }
       ]);
       setCurrentStep('feedback');
     } catch (err) {
