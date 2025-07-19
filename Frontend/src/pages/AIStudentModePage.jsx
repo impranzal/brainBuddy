@@ -177,7 +177,7 @@ const AIStudentModePage = () => {
                   </p>
                 </div>
                 <Button type="submit" className="w-full" disabled={loading}>
-                  {loading ? 'Evaluating...' : 'Teach AI'}
+                  {loading ? 'Evaluating...' : 'Start Session'}
                 </Button>
                 {error && <div className="text-red-500 text-sm mt-2">{error}</div>}
               </form>
