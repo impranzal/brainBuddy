@@ -76,7 +76,7 @@ const SignupPage = () => {
         if (result.user.role && result.user.role.toUpperCase() === 'ADMIN') {
           navigate('/admin-dashboard');
         } else {
-          navigate('/dashboard');
+          navigate('/login');
         }
       } else {
         setError(result.error);

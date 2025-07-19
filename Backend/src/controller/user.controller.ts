@@ -224,16 +224,22 @@ export const getNoticeByIdController = async (req: Request, res: Response, next:
     if (!notice) {
       return next(new AppError('Notice not found', 404));
     }
-    // Serve the file for download/view
-    const filePath = path.join(__dirname, '../../', notice.fileUrl);
-    if (!fs.existsSync(filePath)) {
-      return next(new AppError('File not found', 404));
-    }
-    res.download(filePath, err => {
-      if (err) {
-        next(new AppError('Error downloading file', 500));
+    
+    // Only serve file if fileUrl exists
+    if (notice.fileUrl) {
+      const filePath = path.join(__dirname, '../../', notice.fileUrl);
+      if (!fs.existsSync(filePath)) {
+        return next(new AppError('File not found', 404));
       }
-    });
+      res.download(filePath, err => {
+        if (err) {
+          next(new AppError('Error downloading file', 500));
+        }
+      });
+    } else {
+      // Return notice data if no file
+      res.status(200).json(notice);
+    }
   } catch (error: any) {
     next(new AppError(error.message || 'Failed to fetch notice', 500));
   }

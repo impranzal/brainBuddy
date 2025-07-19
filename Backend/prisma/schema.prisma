@@ -26,6 +26,20 @@ model User {
   habits          UserHabit[]
   savedResponses  SavedTutorResponse[]
   ratings         TutorResponseRating[]
+  notices         Notice[]
+}
+
+model Notice {
+  id          String   @id @default(uuid())
+  title       String
+  description String
+  category    String   @default("general")
+  priority    String   @default("medium")
+  fileUrl     String?
+  uploadedBy  String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  user        User     @relation(fields: [uploadedBy], references: [id])
 }
 
 model UserProgress {
@@ -88,15 +102,6 @@ model TutorResponseRating {
   rating     Int
   feedback   String?
   createdAt  DateTime @default(now())
-}
-
-model Notice {
-  id          String   @id @default(uuid())
-  title       String
-  description String
-  fileUrl     String
-  uploadedBy  String
-  createdAt   DateTime @default(now())
 }
 
 enum Role {

@@ -1,7 +1,7 @@
 // Central API service for BrainBuddy frontend
 // Handles all backend HTTP requests and JWT token management
 
-const API_BASE = 'http://localhost:8000/api'; // Updated to match Swagger base URL
+const API_BASE = 'http://localhost:8000/api'; // Change this to your backend IP if different
 
 // Helper to get JWT token from localStorage
 function getToken() {
@@ -243,6 +243,72 @@ export async function uploadAdminProfilePicture(file) {
   });
   if (!res.ok) throw new Error('Failed to upload admin profile picture');
   return res.json();
+}
+
+// --- Admin Registration (temporary) ---
+export async function registerAdmin({ name, email, password }) {
+  const res = await fetch(`${API_BASE}/admin/register`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ name, email, password }),
+  });
+  if (!res.ok) throw new Error('Failed to register admin');
+  return res.json();
+}
+
+// --- Admin Login ---
+export async function adminLogin({ email, password }) {
+  const res = await fetch(`${API_BASE}/admin/login`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ email, password }),
+  });
+  if (!res.ok) throw new Error('Failed to login as admin');
+  return res.json();
+}
+
+// --- Admin Notice Upload ---
+export async function uploadNotice({ title, description, category, priority, file }) {
+  const token = getToken();
+  const formData = new FormData();
+  formData.append('title', title);
+  formData.append('description', description);
+  formData.append('category', category || 'general');
+  formData.append('priority', priority || 'medium');
+  if (file) {
+    formData.append('file', file);
+  }
+  
+  const res = await fetch(`${API_BASE}/admin/upload-notice`, {
+    method: 'POST',
+    headers: {
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    },
+    body: formData,
+  });
+  if (!res.ok) throw new Error('Failed to upload notice');
+  return res.json();
+}
+
+// --- Notices ---
+export async function getNotices() {
+  return apiFetch('/user/notices');
+}
+
+export async function getAllNotices() {
+  return apiFetch('/user/notices');
+}
+
+export async function getAdminNotices() {
+  return apiFetch('/admin/notices');
+}
+
+export async function getNoticeById(id) {
+  return apiFetch(`/user/notices/${id}`);
 }
 
 // --- Admin Profile Update (if supported, similar to user) ---

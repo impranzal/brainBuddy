@@ -1,85 +1,42 @@
-import React, { useState } from 'react';
-import { Calendar, Clock, User, Bell } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Calendar, Clock, User, Bell, RefreshCw } from 'lucide-react';
 import { Badge } from '../components/ui/badge';
+import * as api from '../services/api';
 
 const NoticeBoardPage = () => {
   const [selectedCategory, setSelectedCategory] = useState('all');
+  const [notices, setNotices] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
-  // Mock data for notices
-  const notices = [
-    {
-      id: 1,
-      title: 'Semester Exam Schedule Released',
-      content: 'The final semester examination schedule for all CSIT students has been published. Please check your respective timetables and prepare accordingly.',
-      category: 'academic',
-      priority: 'high',
-      author: 'Academic Department',
-      date: '2024-01-15',
-      time: '10:30 AM',
-      isNew: true
-    },
-    {
-      id: 2,
-      title: 'Campus Maintenance Notice',
-      content: 'Scheduled maintenance will be conducted in the computer labs from 2:00 PM to 6:00 PM on Friday. Please plan your lab sessions accordingly.',
-      category: 'maintenance',
-      priority: 'medium',
-      author: 'IT Department',
-      date: '2024-01-14',
-      time: '09:15 AM',
-      isNew: false
-    },
-    {
-      id: 3,
-      title: 'Student Council Elections',
-      content: 'Nominations are now open for the Student Council elections. Interested candidates can submit their applications by the end of this week.',
-      category: 'events',
-      priority: 'high',
-      author: 'Student Affairs',
-      date: '2024-01-13',
-      time: '03:45 PM',
-      isNew: true
-    },
-    {
-      id: 4,
-      title: 'Library Extended Hours',
-      content: 'The library will remain open until 10:00 PM during the exam preparation period. Students are encouraged to make use of the extended hours.',
-      category: 'academic',
-      priority: 'low',
-      author: 'Library Staff',
-      date: '2024-01-12',
-      time: '11:20 AM',
-      isNew: false
-    },
-    {
-      id: 5,
-      title: 'WiFi Network Upgrade',
-      content: 'The campus WiFi network will be upgraded to provide better connectivity. Brief interruptions may occur during the upgrade process.',
-      category: 'maintenance',
-      priority: 'medium',
-      author: 'IT Department',
-      date: '2024-01-11',
-      time: '02:30 PM',
-      isNew: false
-    },
-    {
-      id: 6,
-      title: 'Sports Meet Registration',
-      content: 'Registration for the annual sports meet is now open. Students can register for various events through the sports department.',
-      category: 'events',
-      priority: 'medium',
-      author: 'Sports Department',
-      date: '2024-01-10',
-      time: '01:15 PM',
-      isNew: false
+  const fetchNotices = async () => {
+    try {
+      setLoading(true);
+      const data = await api.getNotices();
+      setNotices((data?.notices || data || []));
+      setError(null);
+    } catch (err) {
+      console.error('Failed to fetch notices:', err);
+      setError('Failed to load notices. Please try again.');
+    } finally {
+      setLoading(false);
     }
-  ];
+  };
+
+  useEffect(() => {
+    fetchNotices();
+    
+    // Set up real-time refresh every 30 seconds
+    const interval = setInterval(fetchNotices, 30000);
+    return () => clearInterval(interval);
+  }, []);
 
   const categories = [
     { id: 'all', name: 'All Notices', count: notices.length },
-    { id: 'academic', name: 'Academic', count: notices.filter(n => n.category === 'academic').length },
-    { id: 'maintenance', name: 'Maintenance', count: notices.filter(n => n.category === 'maintenance').length },
-    { id: 'events', name: 'Events', count: notices.filter(n => n.category === 'events').length }
+    { id: 'general', name: 'General', count: notices.filter(n => n.category === 'general').length },
+    { id: 'announcement', name: 'Announcement', count: notices.filter(n => n.category === 'announcement').length },
+    { id: 'event', name: 'Event', count: notices.filter(n => n.category === 'event').length },
+    { id: 'important', name: 'Important', count: notices.filter(n => n.category === 'important').length }
   ];
 
   const filteredNotices = selectedCategory === 'all' 
@@ -97,21 +54,63 @@ const NoticeBoardPage = () => {
 
   const getCategoryColor = (category) => {
     switch (category) {
-      case 'academic': return 'bg-blue-100 text-blue-800';
-      case 'maintenance': return 'bg-orange-100 text-orange-800';
-      case 'events': return 'bg-purple-100 text-purple-800';
+      case 'general': return 'bg-gray-100 text-gray-800';
+      case 'announcement': return 'bg-blue-100 text-blue-800';
+      case 'event': return 'bg-purple-100 text-purple-800';
+      case 'important': return 'bg-red-100 text-red-800';
       default: return 'bg-gray-100 text-gray-800';
     }
   };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gray-50 py-8">
+        <div className="max-w-7xl mx-auto px-4">
+          <div className="text-center py-12">
+            <RefreshCw className="h-8 w-8 text-blue-600 animate-spin mx-auto mb-4" />
+            <p className="text-gray-600">Loading notices...</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="min-h-screen bg-gray-50 py-8">
+        <div className="max-w-7xl mx-auto px-4">
+          <div className="text-center py-12">
+            <Bell className="h-12 w-12 text-red-400 mx-auto mb-4" />
+            <p className="text-red-600 mb-4">{error}</p>
+            <button 
+              onClick={fetchNotices}
+              className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+            >
+              Try Again
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gray-50 py-8">
       <div className="max-w-7xl mx-auto px-4">
         {/* Header */}
         <div className="mb-8">
-          <div className="flex items-center gap-3 mb-4">
-            <Bell className="h-8 w-8 text-blue-600" />
-            <h1 className="text-3xl font-bold text-gray-900">Notice Board</h1>
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center gap-3">
+              <Bell className="h-8 w-8 text-blue-600" />
+              <h1 className="text-3xl font-bold text-gray-900">Notice Board</h1>
+            </div>
+            <button 
+              onClick={fetchNotices}
+              className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+            >
+              <RefreshCw className="h-4 w-4" />
+              Refresh
+            </button>
           </div>
           <p className="text-gray-600">Stay updated with the latest announcements and important notices</p>
         </div>
@@ -146,11 +145,11 @@ const NoticeBoardPage = () => {
               <div className="flex items-start justify-between mb-4">
                 <div className="flex-1">
                   <div className="flex items-center gap-2 mb-2">
-                    <Badge className={getCategoryColor(notice.category)}>
-                      {notice.category.charAt(0).toUpperCase() + notice.category.slice(1)}
+                    <Badge className={getCategoryColor(notice.category || 'general')}>
+                      {(notice.category || 'general').charAt(0).toUpperCase() + (notice.category || 'general').slice(1)}
                     </Badge>
-                    <Badge className={`border ${getPriorityColor(notice.priority)}`}>
-                      {notice.priority.charAt(0).toUpperCase() + notice.priority.slice(1)}
+                    <Badge className={`border ${getPriorityColor(notice.priority || 'medium')}`}>
+                      {(notice.priority || 'medium').charAt(0).toUpperCase() + (notice.priority || 'medium').slice(1)}
                     </Badge>
                     {notice.isNew && (
                       <Badge className="bg-red-100 text-red-800 border-red-200">
@@ -166,25 +165,39 @@ const NoticeBoardPage = () => {
 
               {/* Content */}
               <p className="text-gray-600 mb-4 line-clamp-3">
-                {notice.content}
+                {notice.description}
               </p>
+
+              {/* File attachment if exists */}
+              {notice.fileUrl && (
+                <div className="mb-4">
+                  <a 
+                    href={notice.fileUrl} 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-2 text-blue-600 hover:text-blue-800 text-sm"
+                  >
+                    📎 View Attachment
+                  </a>
+                </div>
+              )}
 
               {/* Footer */}
               <div className="flex items-center justify-between text-sm text-gray-500">
                 <div className="flex items-center gap-4">
                   <div className="flex items-center gap-1">
                     <User className="h-4 w-4" />
-                    <span>{notice.author}</span>
+                    <span>{notice.user?.name || notice.uploadedBy || 'Admin'}</span>
                   </div>
                 </div>
                 <div className="flex items-center gap-4">
                   <div className="flex items-center gap-1">
                     <Calendar className="h-4 w-4" />
-                    <span>{new Date(notice.date).toLocaleDateString()}</span>
+                    <span>{new Date(notice.createdAt).toLocaleDateString()}</span>
                   </div>
                   <div className="flex items-center gap-1">
                     <Clock className="h-4 w-4" />
-                    <span>{notice.time}</span>
+                    <span>{new Date(notice.createdAt).toLocaleTimeString()}</span>
                   </div>
                 </div>
               </div>

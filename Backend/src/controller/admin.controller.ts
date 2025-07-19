@@ -1,7 +1,7 @@
 import { Request, Response, NextFunction } from 'express';
 import * as adminService from '../services/admin.service';
 import { AppError } from '../utils/appError';
-import { createNotice } from '../services/notice.service';
+import { createNotice, getAllNotices } from '../services/notice.service';
 import path from 'path';
 
 export const uploadAdminPicture = async (req: Request, res: Response, next: NextFunction) => {
@@ -98,28 +98,40 @@ export const getAdminHonourBoard = async (req: Request, res: Response, next: Nex
 
 export const uploadNotice = async (req: Request, res: Response, next: NextFunction) => {
   try {
-    if (!req.file) {
-      return next(new AppError('No file uploaded', 400));
-    }
-    const { title, description } = req.body;
+    const { title, description, category, priority } = req.body;
     if (!title || !description) {
       return next(new AppError('Title and description are required', 400));
     }
-    // Save file to disk (if using diskStorage) or buffer (memoryStorage)
-    // For now, save to local uploads folder
-    const fileName = `${Date.now()}_${req.file.originalname}`;
-    const fs = require('fs');
-    const uploadPath = path.join(__dirname, '../../uploads', fileName);
-    fs.writeFileSync(uploadPath, req.file.buffer);
-    const fileUrl = `/uploads/${fileName}`;
+    
+    let fileUrl = '';
+    if (req.file) {
+      // Save file to disk (if using diskStorage) or buffer (memoryStorage)
+      const fileName = `${Date.now()}_${req.file.originalname}`;
+      const fs = require('fs');
+      const uploadPath = path.join(__dirname, '../../uploads', fileName);
+      fs.writeFileSync(uploadPath, req.file.buffer);
+      fileUrl = `/uploads/${fileName}`;
+    }
+    
     const notice = await createNotice({
       title,
       description,
-      fileUrl,
+      category: category || 'general',
+      priority: priority || 'medium',
+      fileUrl: fileUrl || undefined,
       uploadedBy: req.user.userId,
     });
     res.status(201).json({ message: 'Notice uploaded successfully', notice });
   } catch (error: any) {
     next(new AppError(error.message || 'Notice upload failed', 500));
+  }
+};
+
+export const getAllNoticesController = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const notices = await getAllNotices();
+    res.status(200).json(notices);
+  } catch (error: any) {
+    next(new AppError(error.message || 'Failed to fetch notices', 500));
   }
 };

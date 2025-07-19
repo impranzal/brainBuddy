@@ -11,6 +11,7 @@ import {
 } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Progress } from "@/components/ui/progress";
+import { Badge } from "@/components/ui/badge";
 import {
   Flame,
   Gamepad2,
@@ -27,6 +28,9 @@ import {
   Heart,
   Battery,
   Star,
+  Crown,
+  Trophy,
+  Bell,
 } from "lucide-react";
 import * as api from "../services/api";
 
@@ -55,6 +59,9 @@ const UserDashboard = () => {
   const [petName] = useState("Luna");
   const [lastFed, setLastFed] = useState(Date.now() - 3600000); // 1 hour ago
   const [lastPlayed, setLastPlayed] = useState(Date.now() - 7200000); // 2 hours ago
+
+  // Notices state
+  const [recentNotices, setRecentNotices] = useState([]);
 
   // Quiz data
   const quizData = [
@@ -147,10 +154,18 @@ const UserDashboard = () => {
 
         const habitRes = await api.getHabitStats();
         setHabits(habitRes.habits || []);
+
+        // Fetch recent notices
+        const noticesRes = await api.getNotices();
+        setRecentNotices((noticesRes?.notices || noticesRes || []).slice(0, 3)); // Get latest 3 notices
       } catch {}
       setLoading(false);
     }
     fetchStats();
+    
+    // Set up real-time refresh every 30 seconds
+    const interval = setInterval(fetchStats, 30000);
+    return () => clearInterval(interval);
   }, []);
 
   const handleImageUpload = async (e) => {
@@ -685,6 +700,111 @@ const UserDashboard = () => {
           {/* Quote of the Day */}
           <div className="text-center mt-10">
             <p className="italic text-lg text-gray-700">"{todayQuote}"</p>
+          </div>
+
+          {/* Real-time Honour Board */}
+          <div className="mt-12">
+            <div className="text-center mb-8">
+              <h2 className="text-3xl font-bold bg-gradient-to-r from-yellow-600 to-orange-600 bg-clip-text text-transparent mb-2">
+                🏆 Live Honour Board
+              </h2>
+              <p className="text-gray-600">Real-time rankings - Updates every 30 seconds</p>
+            </div>
+
+            <Card className="bg-gradient-to-br from-white/90 to-white/70 backdrop-blur-sm border border-white/20 shadow-xl">
+              <CardHeader>
+                <CardTitle className="flex items-center text-xl font-bold text-gray-900">
+                  <Crown className="h-5 w-5 mr-2 text-yellow-500" />
+                  Top Performers
+                  <Badge variant="secondary" className="ml-2">Live</Badge>
+                </CardTitle>
+                <CardDescription>See where you rank among your peers</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {[1, 2, 3].map((position) => (
+                    <div key={position} className="text-center p-4 bg-gradient-to-br from-yellow-50 to-orange-50 rounded-lg border">
+                      <div className="text-4xl mb-2">
+                        {position === 1 ? '🥇' : position === 2 ? '🥈' : '🥉'}
+                      </div>
+                      <div className="text-lg font-bold text-gray-900">#{position}</div>
+                      <div className="text-sm text-gray-600">Loading...</div>
+                      <div className="text-xs text-gray-500">XP: -- | Streak: --</div>
+                    </div>
+                  ))}
+                </div>
+                <div className="mt-6 text-center">
+                  <Button variant="outline" onClick={() => window.location.href = '/honour-board'}>
+                    <Trophy className="h-4 w-4 mr-2" />
+                    View Full Honour Board
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+
+          {/* Recent Notices */}
+          <div className="mt-12">
+            <div className="text-center mb-8">
+              <h2 className="text-3xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent mb-2">
+                📢 Recent Notices
+              </h2>
+              <p className="text-gray-600">Important updates and announcements</p>
+            </div>
+            <Card className="bg-gradient-to-br from-white/90 to-white/70 backdrop-blur-sm border border-white/20 shadow-xl">
+              <CardHeader>
+                <CardTitle className="flex items-center text-xl font-bold text-gray-900">
+                  <Calendar className="h-5 w-5 mr-2 text-blue-500" />
+                  Latest News
+                </CardTitle>
+                <CardDescription>Stay informed about platform updates</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  {recentNotices.length > 0 ? (
+                    recentNotices.map((notice, index) => (
+                      <div key={notice.id} className="bg-blue-50 rounded-lg p-4">
+                        <h4 className="text-lg font-semibold text-blue-900 mb-2">
+                          {notice.title}
+                        </h4>
+                        <p className="text-sm text-gray-700">
+                          {notice.description}
+                        </p>
+                        {notice.fileUrl && (
+                          <a 
+                            href={notice.fileUrl} 
+                            target="_blank" 
+                            rel="noopener noreferrer"
+                            className="inline-flex items-center gap-1 text-blue-600 hover:text-blue-800 text-xs mt-2"
+                          >
+                            📎 View Attachment
+                          </a>
+                        )}
+                        <p className="text-xs text-gray-500 mt-2">
+                          Posted on: {new Date(notice.createdAt).toLocaleDateString()}
+                        </p>
+                      </div>
+                    ))
+                  ) : (
+                    <div className="text-center py-8">
+                      <Bell className="h-8 w-8 text-gray-400 mx-auto mb-2" />
+                      <p className="text-gray-500">No recent notices</p>
+                    </div>
+                  )}
+                </div>
+                {recentNotices.length > 0 && (
+                  <div className="mt-4 text-center">
+                    <Button 
+                      variant="outline" 
+                      onClick={() => window.location.href = '/notice-board'}
+                      className="text-sm"
+                    >
+                      View All Notices
+                    </Button>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
           </div>
 
           {/* Analytics Dashboard */}
