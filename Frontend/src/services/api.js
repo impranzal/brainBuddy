@@ -72,6 +72,21 @@ export async function getXP() {
   return apiFetch('/user/xp');
 }
 
+// --- Update XP, Level, Streak ---
+export async function updateXP(data) {
+  return apiFetch('/user/xp', {
+    method: 'PUT',
+    body: JSON.stringify(data),
+  });
+}
+
+export async function updateStreak(data) {
+  return apiFetch('/user/streak', {
+    method: 'PUT',
+    body: JSON.stringify(data),
+  });
+}
+
 // --- AI Tutor & Student Mode ---
 export async function aiTutor({ topic, mode }) {
   return apiFetch('/user/ai-tutor', {
@@ -109,6 +124,10 @@ export async function getResourceById(id) {
 }
 export async function markResourceCompleted(resourceId) {
   return apiFetch(`/user/mark-completed/${resourceId}`, { method: 'POST' });
+}
+
+export async function getCompletedResources() {
+  return apiFetch('/user/completed-resources');
 }
 
 // --- Honour Board ---
@@ -292,6 +311,11 @@ export async function uploadNotice({ title, description, category, priority, fil
   });
   if (!res.ok) throw new Error('Failed to upload notice');
   return res.json();
+}
+
+// --- Admin Notice Delete ---
+export async function deleteNotice(id) {
+  return apiFetch(`/admin/notices/${id}`, { method: 'DELETE' });
 }
 
 // --- Notices ---

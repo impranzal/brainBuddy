@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from "react";
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { Button } from '@/components/ui/button';
@@ -19,9 +19,18 @@ import {
   Star,
   Save,
   ThumbsUp,
-  CheckCircle
+  CheckCircle,
+  MessageSquare,
+  Target,
+  TrendingUp,
+  Zap,
+  Trophy,
+  Users,
+  Calendar,
+  Heart,
 } from 'lucide-react';
 import * as api from '../services/api';
+import toast from "react-hot-toast";
 
 const AITutorPage = () => {
   const { user, updateUser } = useAuth();
@@ -56,12 +65,12 @@ const AITutorPage = () => {
 
   const handleSaveResponse = async () => {
     // In a real app, this would save to database via backend endpoint
-    alert('Response saved successfully!');
+    toast.success('Response saved successfully!');
   };
 
   const handleRateSession = async (rating) => {
     // In a real app, send rating to backend
-    alert(`Thank you for rating this session ${rating} stars!`);
+    toast.success(`Thank you for rating this session ${rating} stars!`);
   };
 
   const handleMarkUnderstood = async () => {
@@ -73,7 +82,7 @@ const AITutorPage = () => {
       level: newLevel,
       completedLessons: (user?.completedLessons || 0) + 1
     });
-    alert('Great! You earned 50 XP for completing this lesson!');
+    toast.success('Great! You earned 50 XP for completing this lesson!');
   };
 
   const nextCard = () => {
@@ -97,11 +106,11 @@ const AITutorPage = () => {
           <div className="flex items-center py-4">
             <Button 
               variant="ghost" 
-              onClick={() => navigate('/homepage')}
+              onClick={() => navigate('/dashboard')}
               className="mr-4"
             >
               <ArrowLeft className="h-4 w-4 mr-2" />
-              Back to Homepage
+              Back to Dashboard
             </Button>
             <div className="flex items-center">
               <Brain className="h-8 w-8 text-blue-600 mr-2" />

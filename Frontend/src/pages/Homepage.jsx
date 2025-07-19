@@ -31,6 +31,7 @@ import {
   BarChart3
 } from 'lucide-react';
 import * as api from '../services/api';
+import toast from "react-hot-toast";
 
 const Homepage = () => {
   const { user, logout } = useAuth();
@@ -90,7 +91,7 @@ const Homepage = () => {
         navigate('/resource-library');
         break;
       default:
-        alert(`${featureName} feature would be implemented here`);
+        toast.error(`${featureName} feature would be implemented here`);
     }
   };
 

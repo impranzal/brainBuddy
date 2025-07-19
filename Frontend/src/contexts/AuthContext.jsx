@@ -11,6 +11,16 @@ export const useAuth = () => {
   return context;
 };
 
+// Helper function to decode JWT token and get user info
+const decodeToken = (token) => {
+  try {
+    const payload = JSON.parse(atob(token.split('.')[1]));
+    return payload;
+  } catch (error) {
+    return null;
+  }
+};
+
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -19,15 +29,24 @@ export const AuthProvider = ({ children }) => {
   useEffect(() => {
     const token = localStorage.getItem('brainbuddy_token');
     if (token) {
-      api.getProfile()
-        .then(profile => {
-          setUser(profile);
-        })
-        .catch(() => {
-          setUser(null);
-          localStorage.removeItem('brainbuddy_token');
-        })
-        .finally(() => setLoading(false));
+      const tokenData = decodeToken(token);
+      if (tokenData) {
+        // Determine which endpoint to call based on user role
+        const isAdmin = tokenData.role?.toLowerCase() === 'admin';
+        const profilePromise = isAdmin ? api.getAdminProfile() : api.getProfile();
+        
+        profilePromise
+          .then(profile => {
+            setUser(profile);
+          })
+          .catch(() => {
+            setUser(null);
+            localStorage.removeItem('brainbuddy_token');
+          })
+          .finally(() => setLoading(false));
+      } else {
+        setLoading(false);
+      }
     } else {
       setLoading(false);
     }
@@ -46,6 +65,21 @@ export const AuthProvider = ({ children }) => {
       }
     } catch (error) {
       return { success: false, error: error.message || 'Login failed' };
+    }
+  };
+
+  const adminLogin = async (credentials) => {
+    try {
+      const result = await api.adminLogin(credentials);
+      if (result.token) {
+        localStorage.setItem('brainbuddy_token', result.token);
+        setUser(result.user);
+        return { success: true, user: result.user };
+      } else {
+        return { success: false, error: result.error || 'Admin login failed' };
+      }
+    } catch (error) {
+      return { success: false, error: error.message || 'Admin login failed' };
     }
   };
 
@@ -85,6 +119,7 @@ export const AuthProvider = ({ children }) => {
   const value = {
     user,
     login,
+    adminLogin,
     signup,
     logout,
     updateUser,

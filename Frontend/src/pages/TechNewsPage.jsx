@@ -1,8 +1,11 @@
 import React, { useState } from 'react';
-import { Calendar, Clock, User, Newspaper, ExternalLink, Bookmark } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { Calendar, Clock, User, Newspaper, ExternalLink, Bookmark, ArrowLeft } from 'lucide-react';
 import { Badge } from '../components/ui/badge';
+import { Button } from '../components/ui/button';
 
 const TechNewsPage = () => {
+  const navigate = useNavigate();
   const [selectedCategory, setSelectedCategory] = useState('all');
 
   // Mock data for tech news
@@ -114,14 +117,30 @@ const TechNewsPage = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 py-8">
-      <div className="max-w-7xl mx-auto px-4">
-        {/* Header */}
-        <div className="mb-8">
-          <div className="flex items-center gap-3 mb-4">
-            <Newspaper className="h-8 w-8 text-blue-600" />
-            <h1 className="text-3xl font-bold text-gray-900">Tech News</h1>
+    <div className="min-h-screen bg-gray-50">
+      {/* Header */}
+      <div className="bg-white/80 backdrop-blur-sm shadow-sm border-b">
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex items-center py-4">
+            <Button 
+              variant="ghost" 
+              onClick={() => navigate('/dashboard')}
+              className="mr-4"
+            >
+              <ArrowLeft className="h-4 w-4 mr-2" />
+              Back to Dashboard
+            </Button>
+            <div className="flex items-center">
+              <Newspaper className="h-8 w-8 text-blue-600 mr-2" />
+              <span className="text-2xl font-bold text-gray-900">Tech News</span>
+            </div>
           </div>
+        </div>
+      </div>
+
+      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {/* Header Content */}
+        <div className="mb-8">
           <p className="text-gray-600">Stay updated with the latest technology trends and innovations</p>
         </div>
 

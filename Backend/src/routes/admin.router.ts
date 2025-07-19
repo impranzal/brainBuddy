@@ -4,7 +4,7 @@ import {
   uploadResource, deleteResource, getAllResources,
   getAllUsers, getUserProgressReport,
   getTopStreakUsers, logoutAdmin, getAdminProfile, getAdminHonourBoard, uploadNotice,
-  getAllNoticesController
+  getAllNoticesController, deleteNoticeController
 } from '../controller/admin.controller';
 
 import { apiLimiter } from '../middleware/ratelimit.middleware';
@@ -92,9 +92,10 @@ router.delete('/resources/:id', deleteResource);
 router.get('/resources', getAllResources);
 router.get('/users', getAllUsers);
 router.get('/progress/:userId', getUserProgressReport);
-router.get('/honour-board', protect, restrictTo('admin'), getAdminHonourBoard);
-router.get('/profile', protect, restrictTo('admin'), getAdminProfile);
+router.get('/honour-board', getAdminHonourBoard);
+router.get('/profile', getAdminProfile);
 router.post('/upload-notice', upload.single('file'), uploadNotice);
 router.get('/notices', getAllNoticesController);
+router.delete('/notices/:id', deleteNoticeController);
 
 export default router;

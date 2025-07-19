@@ -85,11 +85,11 @@ const AIStudentModePage = () => {
           <div className="flex items-center py-4">
             <Button 
               variant="ghost" 
-              onClick={() => navigate('/homepage')}
+              onClick={() => navigate('/dashboard')}
               className="mr-4"
             >
               <ArrowLeft className="h-4 w-4 mr-2" />
-              Back to Homepage
+              Back to Dashboard
             </Button>
             <div className="flex items-center">
               <GraduationCap className="h-8 w-8 text-green-600 mr-2" />

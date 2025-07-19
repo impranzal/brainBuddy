@@ -11,7 +11,6 @@ declare global {
   }
 }
 export const protect = (req: Request, res: Response, next: NextFunction) => {
-  req.user
   const token = req.headers.authorization?.split(' ')[1];
   if (!token) return next(new AppError('No token provided', 401));
 
@@ -26,7 +25,14 @@ export const protect = (req: Request, res: Response, next: NextFunction) => {
 
 export const restrictTo = (role: 'admin' | 'user') => {
   return (req: Request, res: Response, next: NextFunction) => {
-    if (req.user?.role?.toLowerCase() !== role.toLowerCase()) {
+    if (!req.user) {
+      return next(new AppError('User not authenticated', 401));
+    }
+    
+    const userRole = req.user.role?.toLowerCase();
+    const requiredRole = role.toLowerCase();
+    
+    if (userRole !== requiredRole) {
       return next(new AppError('Access denied', 403));
     }
     next();

@@ -62,6 +62,24 @@ export const getUserXP = async (req: Request, res: Response, next: NextFunction)
   }
 };
 
+export const updateUserXP = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const result = await userService.updateUserXPService(req.user, req.body);
+    res.status(200).json(result);
+  } catch (error: any) {
+    next(new AppError(error.message || 'Failed to update XP', 500));
+  }
+};
+
+export const updateUserStreak = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const result = await userService.updateUserStreakService(req.user, req.body);
+    res.status(200).json(result);
+  } catch (error: any) {
+    next(new AppError(error.message || 'Failed to update streak', 500));
+  }
+};
+
 export const markResourceCompleted = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const result = await userService.markResourceCompletedService(req.user, req.params.resourceId);
@@ -123,6 +141,15 @@ export const getResourceById = async (req: Request, res: Response, next: NextFun
     res.status(200).json(result);
   } catch (error: any) {
     next(new AppError(error.message || 'Failed to fetch resource', 500));
+  }
+};
+
+export const getCompletedResources = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const result = await userService.getCompletedResourcesService(req.user);
+    res.status(200).json(result);
+  } catch (error: any) {
+    next(new AppError(error.message || 'Failed to fetch completed resources', 500));
   }
 };
 

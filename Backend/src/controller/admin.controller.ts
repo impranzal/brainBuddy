@@ -1,7 +1,7 @@
 import { Request, Response, NextFunction } from 'express';
 import * as adminService from '../services/admin.service';
 import { AppError } from '../utils/appError';
-import { createNotice, getAllNotices } from '../services/notice.service';
+import { createNotice, getAllNotices, deleteNotice } from '../services/notice.service';
 import path from 'path';
 
 export const uploadAdminPicture = async (req: Request, res: Response, next: NextFunction) => {
@@ -133,5 +133,15 @@ export const getAllNoticesController = async (req: Request, res: Response, next:
     res.status(200).json(notices);
   } catch (error: any) {
     next(new AppError(error.message || 'Failed to fetch notices', 500));
+  }
+};
+
+export const deleteNoticeController = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const { id } = req.params;
+    await deleteNotice(id);
+    res.status(200).json({ message: 'Notice deleted successfully' });
+  } catch (error: any) {
+    next(new AppError(error.message || 'Failed to delete notice', 500));
   }
 };

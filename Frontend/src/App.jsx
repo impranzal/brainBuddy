@@ -5,6 +5,7 @@ import {
   Route,
   Navigate,
 } from "react-router-dom";
+import { Toaster } from "react-hot-toast";
 import { AuthProvider } from "./contexts/AuthContext";
 import ProtectedRoute from "./components/ProtectedRoute";
 import LoginPage from "./pages/LoginPage";
@@ -21,6 +22,7 @@ import HabitPage from "./pages/HabitPage";
 import LandingPage from "./pages/LandingPage";
 import NoticeBoardPage from "./pages/NoticeBoardPage";
 import TechNewsPage from "./pages/TechNewsPage";
+import ResourceLibraryPage from "./pages/ResourceLibraryPage";
 import Navbar from "./components/Navbar";
 import Footer from "./components/Footer";
 import "./App.css";
@@ -29,16 +31,34 @@ import UserLayout from "./wrapppers/user-layout";
 import UserWrapper from "./wrapppers/user-wrapper";
 import AdminWrapper from "./wrapppers/admin-wrapper";
 
-const ResourceLibraryPage = () => (
-  <div className="min-h-screen flex items-center justify-center text-2xl">
-    Resource Library Coming Soon!
-  </div>
-);
-
 function App() {
   return (
     <Router>
       <div className="App">
+        <Toaster 
+          position="top-right"
+          toastOptions={{
+            duration: 4000,
+            style: {
+              background: '#363636',
+              color: '#fff',
+            },
+            success: {
+              duration: 3000,
+              iconTheme: {
+                primary: '#4ade80',
+                secondary: '#fff',
+              },
+            },
+            error: {
+              duration: 4000,
+              iconTheme: {
+                primary: '#ef4444',
+                secondary: '#fff',
+              },
+            },
+          }}
+        />
         <Routes>
           {/* Public Routes */}
           <Route element={<OpenRoutes />}>

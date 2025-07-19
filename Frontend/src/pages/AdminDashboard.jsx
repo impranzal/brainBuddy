@@ -124,7 +124,21 @@ const AdminDashboard = () => {
 
       setStudents(usersRes.users || []);
       setResources(resourcesRes.resources || []);
-      setHonourResults(honourRes || []);
+      console.log('Honour board data received:', honourRes);
+      // Ensure the data is properly sorted by XP
+      const sortedHonourResults = (honourRes || []).sort((a, b) => {
+        const xpA = a.xp || 0;
+        const xpB = b.xp || 0;
+        if (xpA !== xpB) {
+          return xpB - xpA; // Sort by XP descending
+        }
+        // If XP is the same, sort by streak descending
+        const streakA = a.streak || 0;
+        const streakB = b.streak || 0;
+        return streakB - streakA;
+      });
+      console.log('Sorted honour board data:', sortedHonourResults);
+      setHonourResults(sortedHonourResults);
       setNotices(noticesRes || []);
 
       // Calculate stats
@@ -233,6 +247,26 @@ const AdminDashboard = () => {
     }
   };
 
+  const handleDeleteNotice = async (id) => {
+    if (!confirm('Are you sure you want to delete this notice?')) return;
+    
+    try {
+      await api.deleteNotice(id);
+      await fetchDashboardData(); // Refresh data
+      showFeedback('Notice deleted successfully!');
+    } catch (error) {
+      console.error('Delete notice error:', error);
+      showFeedback('Failed to delete notice', 'error');
+    }
+  };
+
+  const handleDownloadFile = (fileUrl) => {
+    if (fileUrl) {
+      const fullUrl = `${window.location.origin}/api${fileUrl}`;
+      window.open(fullUrl, '_blank');
+    }
+  };
+
   const handleViewProgress = async (userId) => {
     try {
       const data = await api.getUserProgressReport(userId);
@@ -250,7 +284,21 @@ const AdminDashboard = () => {
     try {
       setHonourLoading(true);
       const results = await api.getAdminHonourBoard(honourSearch);
-      setHonourResults(results);
+      console.log('Search results:', results);
+      // Ensure search results are also sorted by XP
+      const sortedResults = (results || []).sort((a, b) => {
+        const xpA = a.xp || 0;
+        const xpB = b.xp || 0;
+        if (xpA !== xpB) {
+          return xpB - xpA; // Sort by XP descending
+        }
+        // If XP is the same, sort by streak descending
+        const streakA = a.streak || 0;
+        const streakB = b.streak || 0;
+        return streakB - streakA;
+      });
+      console.log('Sorted search results:', sortedResults);
+      setHonourResults(sortedResults);
       showFeedback(`Found ${results.length} results`);
     } catch (error) {
       console.error('Search error:', error);
@@ -427,7 +475,7 @@ const AdminDashboard = () => {
                   Top Performers
                 </Badge>
               </CardTitle>
-              <CardDescription>Students with highest XP and streaks - Updates every 30 seconds</CardDescription>
+              <CardDescription>Students ranked by highest XP earned - Updates every 30 seconds</CardDescription>
             </CardHeader>
             <CardContent>
               <form onSubmit={handleHonourSearch} className="flex gap-2 mb-4">
@@ -654,12 +702,20 @@ const AdminDashboard = () => {
                         <td className="px-4 py-2 whitespace-nowrap">
                           <div className="flex gap-2">
                             {notice.fileUrl && (
-                              <Button size="sm" variant="outline">
+                              <Button 
+                                size="sm" 
+                                variant="outline"
+                                onClick={() => handleDownloadFile(notice.fileUrl)}
+                              >
                                 <Download className="h-3 w-3 mr-1" />
                                 Download
                               </Button>
                             )}
-                            <Button size="sm" variant="destructive">
+                            <Button 
+                              size="sm" 
+                              variant="destructive"
+                              onClick={() => handleDeleteNotice(notice.id)}
+                            >
                               <Trash2 className="h-3 w-3 mr-1" />
                               Delete
                             </Button>

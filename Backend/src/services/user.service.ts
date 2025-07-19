@@ -86,21 +86,95 @@ export const getUserDashboardService = async (user: any) => {
 
 export const uploadProfilePictureService = async (user: any, file: any) => {
   if (!file) throw new Error('No file uploaded');
+  
+  // Convert file buffer to base64
+  const base64Image = file.buffer.toString('base64');
+  const mimeType = file.mimetype || 'image/jpeg';
+  
+  // Create data URL for the frontend
+  const dataUrl = `data:${mimeType};base64,${base64Image}`;
+  
   const updated = await prisma.user.update({
-    where: { id: user.id },
-    data: { profilePicture: file.buffer.toString('base64') },
+    where: { id: user.userId },
+    data: { profilePicture: base64Image },
   });
-  return { message: 'Profile picture updated', data: updated };
+  
+  return { 
+    message: 'Profile picture updated', 
+    profilePictureUrl: dataUrl,
+    url: dataUrl,
+    data: updated 
+  };
 };
 
 export const getUserStreakService = async (user: any) => {
-  const streak = await prisma.userProgress.findFirst({ where: { userId: user.id } });
+  const streak = await prisma.userProgress.findFirst({ where: { userId: user.userId } });
   return { streak: streak?.streak || 0 };
 };
 
 export const getUserXPService = async (user: any) => {
-  const xp = await prisma.userProgress.findFirst({ where: { userId: user.id } });
+  const xp = await prisma.userProgress.findFirst({ where: { userId: user.userId } });
   return { xp: xp?.xp || 0 };
+};
+
+export const updateUserXPService = async (user: any, data: any) => {
+  const { xp } = data;
+  if (xp === undefined || xp < 0) throw new Error('Valid XP value required');
+
+  // Find existing progress or create new one
+  let userProgress = await prisma.userProgress.findFirst({ where: { userId: user.userId } });
+  
+  if (userProgress) {
+    // Update existing progress
+    userProgress = await prisma.userProgress.update({
+      where: { id: userProgress.id },
+      data: { xp: parseInt(xp) }
+    });
+  } else {
+    // Create new progress record
+    userProgress = await prisma.userProgress.create({
+      data: { 
+        userId: user.userId, 
+        xp: parseInt(xp),
+        streak: 0
+      }
+    });
+  }
+
+  return { 
+    message: 'XP updated successfully',
+    xp: userProgress.xp 
+  };
+};
+
+export const updateUserStreakService = async (user: any, data: any) => {
+  const { streak } = data;
+  if (streak === undefined || streak < 0) throw new Error('Valid streak value required');
+
+  // Find existing progress or create new one
+  let userProgress = await prisma.userProgress.findFirst({ where: { userId: user.userId } });
+  
+  if (userProgress) {
+    // Update existing progress
+    userProgress = await prisma.userProgress.update({
+      where: { id: userProgress.id },
+      data: { streak: parseInt(streak) }
+    });
+  } else {
+    // Create new progress record
+    userProgress = await prisma.userProgress.create({
+      data: { 
+        userId: user.userId, 
+        streak: parseInt(streak),
+        xp: 0
+      }
+    });
+  }
+
+  return { 
+    message: 'Streak updated successfully',
+    streak: userProgress.streak 
+  };
 };
 
 export const markResourceCompletedService = async (user: any, resourceId: string) => {
@@ -108,6 +182,14 @@ export const markResourceCompletedService = async (user: any, resourceId: string
     data: { userId: user.userId, resourceId },
   });
   return { message: 'Resource marked as completed' };
+};
+
+export const getCompletedResourcesService = async (user: any) => {
+  const completedResources = await prisma.completedResource.findMany({
+    where: { userId: user.userId },
+    include: { resource: true },
+  });
+  return { completedResources };
 };
 export const generateTutorResponseService = async (user: any, body: any) => {
   const { topic, mode } = body;
@@ -242,11 +324,11 @@ export const getResourceByIdService = async (id: string) => {
 
 export const getTopStreakUsersService = async () => {
   const users = await prisma.user.findMany({
-    orderBy: {
-      progress: {
-        streak: 'desc',
-      },
-    },
+    where: { role: 'USER' },
+    orderBy: [
+      { progress: { xp: 'desc' } },
+      { progress: { streak: 'desc' } },
+    ],
     take: 10,
     include: {
       progress: true,
@@ -276,8 +358,15 @@ export const getUserProfileService = async (userId: string) => {
     throw new Error('User not found');
   }
 
+  // Convert base64 profile picture to data URL if it exists
+  let profilePictureUrl = null;
+  if (user.profilePicture) {
+    profilePictureUrl = `data:image/jpeg;base64,${user.profilePicture}`;
+  }
+
   return {
     ...user,
+    profilePictureUrl,
     streak: user.progress?.streak ?? 0,
     xp: user.progress?.xp ?? 0,
   };

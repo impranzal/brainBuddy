@@ -13,7 +13,7 @@ import { Badge } from "./ui/badge";
 import { Trophy, Flame, Search } from "lucide-react";
 import { Link } from "react-router-dom";
 import logo from "../assets/logo.png"; // Adjust the path based on your logo location
-// import api from "../services/api";
+import * as api from "../services/api";
 
 const AdminNavbar = () => {
   const [honorBoardOpen, setHonorBoardOpen] = useState(false);
@@ -25,15 +25,38 @@ const AdminNavbar = () => {
     async function fetchHonorBoard() {
       try {
         const data = await api.getHonourBoard();
+        console.log('AdminNavbar honour board data received:', data);
+        let students = [];
         if (Array.isArray(data)) {
-          setTopStudents(data);
+          students = data;
         } else if (Array.isArray(data.students)) {
-          setTopStudents(data.students);
+          students = data.students;
         } else if (Array.isArray(data.users)) {
-          setTopStudents(data.users);
+          students = data.users;
         } else {
-          setTopStudents([]);
+          students = [];
         }
+        
+        // Transform the data to ensure XP and streak are properly extracted
+        const transformedStudents = students.map(student => ({
+          id: student.id,
+          name: student.name,
+          username: student.username,
+          xp: student.xp || student.progress?.xp || 0,
+          streak: student.streak || student.progress?.streak || 0,
+          level: student.level || Math.floor((student.xp || student.progress?.xp || 0) / 100) + 1
+        }));
+        
+        console.log('Transformed students:', transformedStudents);
+        // Sort by XP descending, then by streak descending
+        const sortedStudents = transformedStudents.sort((a, b) => {
+          if (a.xp !== b.xp) {
+            return b.xp - a.xp; // Sort by XP descending
+          }
+          return b.streak - a.streak; // If XP is same, sort by streak descending
+        });
+        console.log('Sorted students:', sortedStudents);
+        setTopStudents(sortedStudents);
       } catch {
         setTopStudents([]);
       }
@@ -123,7 +146,7 @@ const AdminNavbar = () => {
                   Honor Board
                 </SheetTitle>
                 <SheetDescription>
-                  Top students with highest streaks
+                  Top students with highest XP earned
                 </SheetDescription>
               </SheetHeader>
               <div className="mt-6">
@@ -151,6 +174,8 @@ const AdminNavbar = () => {
                             {student.name}
                           </p>
                           <div className="flex items-center text-sm text-gray-600">
+                            <span className="text-yellow-600 font-medium">{student.xp} XP</span>
+                            <span className="mx-2">•</span>
                             <Flame className="h-3 w-3 mr-1 text-orange-500" />
                             {student.streak} day streak
                           </div>
@@ -158,9 +183,7 @@ const AdminNavbar = () => {
                       </div>
                       <div className="text-right">
                         <Badge variant="secondary">Level {student.level}</Badge>
-                        <p className="text-xs text-gray-500 mt-1">
-                          {student.xp} XP
-                        </p>
+                        <p className="text-xs text-gray-500 mt-1">Rank #{index + 1}</p>
                       </div>
                     </div>
                   ))}

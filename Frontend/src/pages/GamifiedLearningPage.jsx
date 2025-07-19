@@ -24,6 +24,7 @@ import {
   Sparkles
 } from 'lucide-react';
 import * as api from '../services/api';
+import toast from "react-hot-toast";
 
 // Add new API calls for feeding pet and starting quiz
 async function feedPetBackend() {
@@ -79,7 +80,7 @@ const GamifiedLearningPage = () => {
       const newXP = currentXP + achievement.xpReward;
       const newLevel = Math.floor(newXP / 100) + 1;
       updateUser({ xp: newXP, level: newLevel });
-      alert(`Congratulations! You earned ${achievement.xpReward} XP for "${achievement.title}"!`);
+      toast.success(`Congratulations! You earned ${achievement.xpReward} XP for "${achievement.title}"!`);
     }
   };
 
@@ -88,9 +89,9 @@ const GamifiedLearningPage = () => {
     try {
       const quizData = await startQuizBackend();
       setQuiz(quizData);
-      alert('Quiz started! (Implement quiz UI to display questions)');
+      toast.success('Quiz started! (Implement quiz UI to display questions)');
     } catch {
-      alert('Failed to start quiz.');
+      toast.error('Failed to start quiz.');
     }
     setQuizLoading(false);
   };
@@ -100,9 +101,9 @@ const GamifiedLearningPage = () => {
     try {
       const petData = await feedPetBackend();
       setPet(petData.pet || petData);
-      alert('Your virtual pet is happy!');
+      toast.success('Your virtual pet is happy!');
     } catch {
-      alert('Failed to feed pet.');
+      toast.error('Failed to feed pet.');
     }
     setPetLoading(false);
   };

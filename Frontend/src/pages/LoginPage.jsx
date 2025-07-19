@@ -13,6 +13,7 @@ import {
 } from "@/components/ui/card";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Brain, User, Lock, Eye, EyeOff, Mail } from "lucide-react";
+import * as api from "../services/api";
 
 const LoginPage = () => {
   const [formData, setFormData] = useState({
@@ -23,7 +24,7 @@ const LoginPage = () => {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
-  const { login } = useAuth();
+  const { login, adminLogin } = useAuth();
   const navigate = useNavigate();
 
   const handleChange = (e) => {
@@ -45,18 +46,32 @@ const LoginPage = () => {
       return;
     }
 
-    const result = await login(formData);
-    console.log(result);
-
-    if (result.success) {
-      // Role-based redirect
-      if (result.user && result.user.toUpperCase() === "ADMIN") {
-        navigate("/admin-dashboard");
+    try {
+      // Try regular user login first
+      const result = await login(formData);
+      
+      if (result.success) {
+        // Role-based redirect
+        if (result.user && result.user.toUpperCase() === "ADMIN") {
+          navigate("/admin-dashboard");
+        } else {
+          navigate("/profile");
+        }
       } else {
-        navigate("/profile");
+        // If regular login fails, try admin login
+        try {
+          const adminResult = await adminLogin(formData);
+          if (adminResult.success) {
+            navigate("/admin-dashboard");
+          } else {
+            setError("Invalid credentials");
+          }
+        } catch (adminError) {
+          setError("Invalid credentials");
+        }
       }
-    } else {
-      setError(result.error);
+    } catch (error) {
+      setError("Login failed. Please try again.");
     }
 
     setLoading(false);

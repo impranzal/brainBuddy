@@ -1,4 +1,6 @@
 import prisma from '../connect/prisma';
+import fs from 'fs';
+import path from 'path';
 
 export const createNotice = async (data: {
   title: string;
@@ -38,5 +40,34 @@ export const getAllNotices = async () => {
 export const getNoticeById = async (id: string) => {
   return prisma.notice.findUnique({
     where: { id },
+  });
+};
+
+export const deleteNotice = async (id: string) => {
+  // First get the notice to check if it has a file
+  const notice = await prisma.notice.findUnique({
+    where: { id }
+  });
+
+  if (!notice) {
+    throw new Error('Notice not found');
+  }
+
+  // Delete the associated file if it exists
+  if (notice.fileUrl) {
+    try {
+      const filePath = path.join(__dirname, '../../', notice.fileUrl);
+      if (fs.existsSync(filePath)) {
+        fs.unlinkSync(filePath);
+      }
+    } catch (error) {
+      console.error('Error deleting file:', error);
+      // Continue with notice deletion even if file deletion fails
+    }
+  }
+
+  // Delete the notice from database
+  return prisma.notice.delete({
+    where: { id }
   });
 }; 

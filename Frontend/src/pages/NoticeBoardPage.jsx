@@ -1,19 +1,24 @@
 import React, { useState, useEffect } from 'react';
-import { Calendar, Clock, User, Bell, RefreshCw } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { Calendar, Clock, User, Bell, RefreshCw, ArrowLeft } from 'lucide-react';
 import { Badge } from '../components/ui/badge';
+import { Button } from '../components/ui/button';
 import * as api from '../services/api';
 
 const NoticeBoardPage = () => {
+  const navigate = useNavigate();
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [notices, setNotices] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [lastUpdated, setLastUpdated] = useState(null);
 
   const fetchNotices = async () => {
     try {
       setLoading(true);
       const data = await api.getNotices();
       setNotices((data?.notices || data || []));
+      setLastUpdated(new Date());
       setError(null);
     } catch (err) {
       console.error('Failed to fetch notices:', err);
@@ -26,8 +31,8 @@ const NoticeBoardPage = () => {
   useEffect(() => {
     fetchNotices();
     
-    // Set up real-time refresh every 30 seconds
-    const interval = setInterval(fetchNotices, 30000);
+    // Set up real-time refresh every 10 seconds for better responsiveness
+    const interval = setInterval(fetchNotices, 10000);
     return () => clearInterval(interval);
   }, []);
 
@@ -42,6 +47,14 @@ const NoticeBoardPage = () => {
   const filteredNotices = selectedCategory === 'all' 
     ? notices 
     : notices.filter(notice => notice.category === selectedCategory);
+
+  // Check if notice is new (created within last 24 hours)
+  const isNoticeNew = (notice) => {
+    const noticeDate = new Date(notice.createdAt);
+    const now = new Date();
+    const diffInHours = (now - noticeDate) / (1000 * 60 * 60);
+    return diffInHours < 24;
+  };
 
   const getPriorityColor = (priority) => {
     switch (priority) {
@@ -62,7 +75,7 @@ const NoticeBoardPage = () => {
     }
   };
 
-  if (loading) {
+  if (loading && notices.length === 0) {
     return (
       <div className="min-h-screen bg-gray-50 py-8">
         <div className="max-w-7xl mx-auto px-4">
@@ -75,7 +88,7 @@ const NoticeBoardPage = () => {
     );
   }
 
-  if (error) {
+  if (error && notices.length === 0) {
     return (
       <div className="min-h-screen bg-gray-50 py-8">
         <div className="max-w-7xl mx-auto px-4">
@@ -95,24 +108,53 @@ const NoticeBoardPage = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 py-8">
-      <div className="max-w-7xl mx-auto px-4">
-        {/* Header */}
+    <div className="min-h-screen bg-gray-50">
+      {/* Header */}
+      <div className="bg-white/80 backdrop-blur-sm shadow-sm border-b">
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex items-center py-4">
+            <Button 
+              variant="ghost" 
+              onClick={() => navigate('/dashboard')}
+              className="mr-4"
+            >
+              <ArrowLeft className="h-4 w-4 mr-2" />
+              Back to Dashboard
+            </Button>
+            <div className="flex items-center">
+              <Bell className="h-8 w-8 text-blue-600 mr-2" />
+              <span className="text-2xl font-bold text-gray-900">Notice Board</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {/* Header Content */}
         <div className="mb-8">
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-3">
-              <Bell className="h-8 w-8 text-blue-600" />
-              <h1 className="text-3xl font-bold text-gray-900">Notice Board</h1>
+              {lastUpdated && (
+                <span className="text-sm text-gray-500">
+                  Last updated: {lastUpdated.toLocaleTimeString()}
+                </span>
+              )}
             </div>
             <button 
               onClick={fetchNotices}
-              className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+              disabled={loading}
+              className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50"
             >
-              <RefreshCw className="h-4 w-4" />
-              Refresh
+              <RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
+              {loading ? 'Refreshing...' : 'Refresh'}
             </button>
           </div>
           <p className="text-gray-600">Stay updated with the latest announcements and important notices</p>
+          {error && (
+            <div className="mt-2 p-3 bg-red-50 border border-red-200 rounded-lg">
+              <p className="text-red-600 text-sm">{error}</p>
+            </div>
+          )}
         </div>
 
         {/* Category Filters */}
@@ -151,7 +193,7 @@ const NoticeBoardPage = () => {
                     <Badge className={`border ${getPriorityColor(notice.priority || 'medium')}`}>
                       {(notice.priority || 'medium').charAt(0).toUpperCase() + (notice.priority || 'medium').slice(1)}
                     </Badge>
-                    {notice.isNew && (
+                    {isNoticeNew(notice) && (
                       <Badge className="bg-red-100 text-red-800 border-red-200">
                         New
                       </Badge>

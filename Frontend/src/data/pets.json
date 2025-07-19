@@ -1,0 +1,184 @@
+{
+  "pets": [
+    {
+      "id": "cat",
+      "name": "Cat",
+      "baseEmoji": "🐱",
+      "description": "A curious and independent feline companion",
+      "levels": {
+        "0": {
+          "emoji": "🥚",
+          "name": "Cat Egg",
+          "description": "A mysterious egg waiting to hatch"
+        },
+        "1-3": {
+          "emoji": "🐱",
+          "name": "Kitten",
+          "description": "A playful little kitten"
+        },
+        "4-6": {
+          "emoji": "🐈",
+          "name": "Young Cat",
+          "description": "A growing cat with lots of energy"
+        },
+        "7-9": {
+          "emoji": "🐈‍⬛",
+          "name": "Adult Cat",
+          "description": "A wise and elegant cat"
+        },
+        "10+": {
+          "emoji": "🦁",
+          "name": "Legendary Cat",
+          "description": "A majestic and powerful feline"
+        }
+      },
+      "personality": "curious, independent, graceful",
+      "favoriteFood": "fish",
+      "favoriteActivity": "napping in sunbeams"
+    },
+    {
+      "id": "dog",
+      "name": "Dog",
+      "baseEmoji": "🐕",
+      "description": "A loyal and energetic canine friend",
+      "levels": {
+        "0": {
+          "emoji": "🥚",
+          "name": "Dog Egg",
+          "description": "A mysterious egg waiting to hatch"
+        },
+        "1-3": {
+          "emoji": "🐕",
+          "name": "Puppy",
+          "description": "An adorable little puppy"
+        },
+        "4-6": {
+          "emoji": "🐕‍🦺",
+          "name": "Young Dog",
+          "description": "A growing dog full of energy"
+        },
+        "7-9": {
+          "emoji": "🐕",
+          "name": "Adult Dog",
+          "description": "A loyal and friendly dog"
+        },
+        "10+": {
+          "emoji": "🐺",
+          "name": "Legendary Dog",
+          "description": "A powerful and noble wolf"
+        }
+      },
+      "personality": "loyal, energetic, friendly",
+      "favoriteFood": "bone",
+      "favoriteActivity": "playing fetch"
+    },
+    {
+      "id": "bird",
+      "name": "Bird",
+      "baseEmoji": "🐦",
+      "description": "A colorful and intelligent avian companion",
+      "levels": {
+        "0": {
+          "emoji": "🥚",
+          "name": "Bird Egg",
+          "description": "A mysterious egg waiting to hatch"
+        },
+        "1-3": {
+          "emoji": "🐦",
+          "name": "Baby Bird",
+          "description": "A tiny chirping bird"
+        },
+        "4-6": {
+          "emoji": "🦜",
+          "name": "Young Bird",
+          "description": "A colorful young bird"
+        },
+        "7-9": {
+          "emoji": "🦅",
+          "name": "Adult Bird",
+          "description": "A majestic flying bird"
+        },
+        "10+": {
+          "emoji": "🦅",
+          "name": "Legendary Bird",
+          "description": "A mythical phoenix"
+        }
+      },
+      "personality": "intelligent, colorful, free-spirited",
+      "favoriteFood": "seeds",
+      "favoriteActivity": "singing and flying"
+    },
+    {
+      "id": "rabbit",
+      "name": "Rabbit",
+      "baseEmoji": "🐰",
+      "description": "A gentle and quick bunny friend",
+      "levels": {
+        "0": {
+          "emoji": "🥚",
+          "name": "Rabbit Egg",
+          "description": "A mysterious egg waiting to hatch"
+        },
+        "1-3": {
+          "emoji": "🐰",
+          "name": "Baby Rabbit",
+          "description": "A tiny hopping bunny"
+        },
+        "4-6": {
+          "emoji": "🐇",
+          "name": "Young Rabbit",
+          "description": "A growing rabbit"
+        },
+        "7-9": {
+          "emoji": "🐰",
+          "name": "Adult Rabbit",
+          "description": "A gentle adult rabbit"
+        },
+        "10+": {
+          "emoji": "🐰",
+          "name": "Legendary Rabbit",
+          "description": "A magical bunny with special powers"
+        }
+      },
+      "personality": "gentle, quick, shy",
+      "favoriteFood": "carrots",
+      "favoriteActivity": "hopping and exploring"
+    },
+    {
+      "id": "dragon",
+      "name": "Dragon",
+      "baseEmoji": "🐉",
+      "description": "A powerful and mystical dragon companion",
+      "levels": {
+        "0": {
+          "emoji": "🥚",
+          "name": "Dragon Egg",
+          "description": "A mysterious egg waiting to hatch"
+        },
+        "1-3": {
+          "emoji": "🐉",
+          "name": "Baby Dragon",
+          "description": "A tiny baby dragon"
+        },
+        "4-6": {
+          "emoji": "🐲",
+          "name": "Young Dragon",
+          "description": "A growing dragon"
+        },
+        "7-9": {
+          "emoji": "🐉",
+          "name": "Adult Dragon",
+          "description": "A powerful adult dragon"
+        },
+        "10+": {
+          "emoji": "🐉",
+          "name": "Legendary Dragon",
+          "description": "An ancient and mighty dragon"
+        }
+      },
+      "personality": "powerful, mystical, protective",
+      "favoriteFood": "gems",
+      "favoriteActivity": "flying and breathing fire"
+    }
+  ]
+} 
