@@ -31,6 +31,7 @@ import {
   Crown,
   Trophy,
   Bell,
+  CloudCog,
 } from "lucide-react";
 import * as api from "../services/api";
 import PetSelection from "../components/PetSelection";
@@ -537,7 +538,7 @@ const UserDashboard = () => {
     }
     
     // Only fetch stats after initial data loading is complete
-    if (!isInitialLoad) {
+    if (isInitialLoad) {
       fetchStats();
       
       // Set up real-time refresh every 30 seconds
