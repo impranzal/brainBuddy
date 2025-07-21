@@ -7,6 +7,7 @@ import { generateTutorResponseService } from '../services/user.service';
 import { getAllNotices, getNoticeById } from '../services/notice.service';
 import path from 'path';
 import fs from 'fs';
+import { getGeminiResponse } from '../utils/gemini';
 
 export const registerUser = async (req: Request, res: Response, next: NextFunction) => {
   try {
@@ -269,5 +270,16 @@ export const getNoticeByIdController = async (req: Request, res: Response, next:
     }
   } catch (error: any) {
     next(new AppError(error.message || 'Failed to fetch notice', 500));
+  }
+};
+
+export const proxyGemini = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const { prompt } = req.body;
+    if (!prompt) return res.status(400).json({ error: 'Prompt is required' });
+    const result = await getGeminiResponse(prompt);
+    res.status(200).json({ result });
+  } catch (error: any) {
+    next(new AppError(error.message || 'Failed to get Gemini response', 500));
   }
 };

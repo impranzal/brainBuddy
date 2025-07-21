@@ -1,4 +1,5 @@
 const { PrismaClient } = require('@prisma/client');
+const bcrypt = require('bcryptjs');
 
 const prisma = new PrismaClient();
 
@@ -61,6 +62,54 @@ const sampleResources = [
   }
 ];
 
+async function seedUsers() {
+  try {
+    // Admin user
+    const adminExists = await prisma.user.findFirst({
+      where: { OR: [{ username: 'admin' }, { email: 'admin@example.com' }] }
+    });
+    if (!adminExists) {
+      const hashedPassword = await bcrypt.hash('admin123', 10);
+      await prisma.user.create({
+        data: {
+          username: 'admin',
+          name: 'Admin',
+          email: 'admin@example.com',
+          password: hashedPassword,
+          role: 'ADMIN',
+          isApproved: true
+        }
+      });
+      console.log('Seeded admin user');
+    } else {
+      console.log('Admin user already exists');
+    }
+
+    // Student user
+    const studentExists = await prisma.user.findFirst({
+      where: { OR: [{ username: 'student' }, { email: 'student@example.com' }] }
+    });
+    if (!studentExists) {
+      const hashedPassword = await bcrypt.hash('student123', 10);
+      await prisma.user.create({
+        data: {
+          username: 'student',
+          name: 'Student',
+          email: 'student@example.com',
+          password: hashedPassword,
+          role: 'USER',
+          isApproved: true
+        }
+      });
+      console.log('Seeded student user');
+    } else {
+      console.log('Student user already exists');
+    }
+  } catch (error) {
+    console.error('Error seeding users:', error);
+  }
+}
+
 async function seedResources() {
   try {
     console.log('Starting to seed resources...');
@@ -90,4 +139,7 @@ async function seedResources() {
   }
 }
 
-seedResources();
+(async () => {
+  await seedUsers();
+  await seedResources();
+})();

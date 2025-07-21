@@ -31,92 +31,27 @@ import {
 } from 'lucide-react';
 import * as api from '../services/api';
 import toast from "react-hot-toast";
-import { GEMINI_API_KEY, GEMINI_MODEL } from '../config/api';
+// Remove GEMINI_API_KEY and GEMINI_MODEL imports
 
-// Direct Gemini API integration
+// Replace callGeminiAPI with a backend proxy call
 const callGeminiAPI = async (prompt, setLoadingMessage = null) => {
-  // Debug: Log the API key (first few characters for security)
-  console.log('API Key check:', GEMINI_API_KEY ? `${GEMINI_API_KEY.substring(0, 10)}...` : 'undefined');
-  
-  // Check if API key is properly set
-  if (!GEMINI_API_KEY) {
-    console.error('API Key is undefined or null');
-    throw new Error('Gemini API key not configured. Please set your API key in src/config/api.js');
-  }
-  
-  if (GEMINI_API_KEY === 'YOUR_ACTUAL_GEMINI_API_KEY_HERE') {
-    console.error('API Key is still the placeholder value');
-    throw new Error('Gemini API key not configured. Please set your API key in src/config/api.js');
-  }
-  
-  if (GEMINI_API_KEY.length < 10) {
-    console.error('API Key seems too short');
-    throw new Error('Gemini API key appears to be invalid. Please check your API key in src/config/api.js');
-  }
-
-  console.log('API Key validation passed. Proceeding with request...');
-
-  const maxRetries = 3;
-  let retryCount = 0;
-
-  while (retryCount < maxRetries) {
-    try {
-      console.log('Making API request to Gemini...');
-      const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${GEMINI_API_KEY}`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          contents: [{ parts: [{ text: prompt }] }]
-        })
-      });
-
-      console.log('Response status:', response.status);
-      console.log('Response ok:', response.ok);
-
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        console.error('Gemini API error details:', errorData);
-        
-        if (response.status === 400) {
-          throw new Error('Invalid API key or request format');
-        } else if (response.status === 403) {
-          throw new Error('API key not authorized or quota exceeded');
-        } else if (response.status === 429) {
-          // Rate limit exceeded - wait and retry
-          retryCount++;
-          if (retryCount < maxRetries) {
-            const waitTime = Math.pow(2, retryCount) * 1000; // Exponential backoff: 2s, 4s, 8s
-            console.log(`Rate limit hit. Waiting ${waitTime/1000}s before retry ${retryCount}/${maxRetries}...`);
-            // Update loading message to show retry status
-            if (setLoadingMessage) {
-              setLoadingMessage(`Rate limit hit. Retrying in ${waitTime/1000}s... (${retryCount}/${maxRetries})`);
-            }
-            await new Promise(resolve => setTimeout(resolve, waitTime));
-            continue;
-          } else {
-            throw new Error('Rate limit exceeded. Please wait a minute and try again.');
-          }
-        } else {
-          throw new Error(`Gemini API error: ${errorData.error?.message || response.statusText}`);
-        }
-      }
-
-      console.log('Parsing response...');
-      const data = await response.json();
-      console.log('Response data:', data);
-      return data.candidates?.[0]?.content?.parts?.[0]?.text || 'No response from Gemini';
-    } catch (error) {
-      console.error('Gemini API error:', error);
-      if (error.message.includes('API key')) {
-        throw new Error('Please configure your Gemini API key in src/config/api.js. Get one from https://makersuite.google.com/app/apikey');
-      }
-      if (error.message.includes('Rate limit')) {
-        throw error; // Re-throw rate limit errors
-      }
-      throw new Error('Failed to get AI response. Please check your internet connection and try again.');
+  try {
+    const response = await fetch('/api/user/gemini-proxy', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ prompt }),
+      credentials: 'include',
+    });
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(errorData.error || response.statusText);
     }
+    const data = await response.json();
+    return data.result;
+  } catch (error) {
+    throw new Error(error.message || 'Failed to get AI response from backend');
   }
 };
 

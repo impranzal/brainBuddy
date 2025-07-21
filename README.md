@@ -156,13 +156,24 @@ pnpm run dev   # or npm run dev
 
 ### Test Accounts
 
+You can log in using either **username or email** for the test accounts below:
+
 **Admin**
-- Username: `admin`
+- Username: `admin`  
+- Email: `admin@example.com`
 - Password: `admin123`
 
 **Student**
-- Username: `student`
+- Username: `student`  
+- Email: `student@example.com`
 - Password: `student123`
+
+---
+
+## Security Note: API Keys
+
+- All sensitive API keys (such as Gemini) are now securely stored on the backend and never exposed to the frontend or end users.
+- The frontend communicates with the backend for all Gemini API requests, ensuring your keys remain private.
 
 ---
 
@@ -177,11 +188,22 @@ pnpm run dev   # or npm run dev
 
 ---
 
-## Support
+## Environment Variables
 
-- For questions, see `Frontend/PROJECT_SUMMARY.md` and code comments.
-- Open issues or discussions on the GitHub repository.
+### Backend (.env in /Backend)
+
+- `DATABASE_URL` — Your database connection string (PostgreSQL, MySQL, or SQLite)
+- `GEMINI_API_KEY` — Your Gemini API key (never expose this to frontend)
+- (Add any other secrets, e.g., JWT secret, Cloudinary keys, etc.)
+
+### Frontend (.env in /Frontend, if needed)
+
+- (Optional) `VITE_API_BASE` — Override backend API base URL for deployment
+
+**Never commit your .env files to version control.**
 
 ---
 
-**Enjoy exploring BrainBuddy! 🚀** 
+## Support
+
+- For questions, see `

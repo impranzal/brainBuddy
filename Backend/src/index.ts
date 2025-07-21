@@ -8,8 +8,16 @@ dotenv.config();
 const app: Express = express();
 const PORT = process.env.PORT ; 
 
+// CORS configuration
+const allowedOrigins = process.env.NODE_ENV === 'production'
+  ? ['https://your-production-domain.com']
+  : ['http://localhost:5173'];
+app.use(cors({
+  origin: allowedOrigins,
+  credentials: true,
+}));
+
 // Middleware
-app.use(cors()); // Enable CORS for all routes
 app.use(express.json());
 
 // Serve static files from uploads directory

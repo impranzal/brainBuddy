@@ -49,10 +49,18 @@ export const registerUserService = async ({ username, name, email, password }: a
   };
 };
 
-export const loginUserService = async ({ email, password }: any) => {
-  if (!email || !password) throw new Error('Email and password are required');
+export const loginUserService = async ({ login, password }: any) => {
+  if (!login || !password) throw new Error('Login and password are required');
 
-  const user = await prisma.user.findUnique({ where: { email } });
+  // Try to find user by email or username
+  const user = await prisma.user.findFirst({
+    where: {
+      OR: [
+        { email: login },
+        { username: login }
+      ]
+    }
+  });
   if (!user) throw new Error('User not found');
 
   const isPasswordValid = await bcrypt.compare(password, user.password);

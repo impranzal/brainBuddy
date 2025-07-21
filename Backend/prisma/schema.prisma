@@ -1,107 +1,103 @@
-// schema.prisma
-
 generator client {
   provider = "prisma-client-js"
 }
 
 datasource db {
-  provider = "postgresql" // or "mysql" or "sqlite"
+  provider = "postgresql"
   url      = env("DATABASE_URL")
 }
 
 model User {
-  id              String            @id @default(uuid())
-  username        String?           @unique
-  name            String
-  email           String            @unique
-  password        String
-  profilePicture  String?
-  role            Role              @default(USER)
-  isApproved      Boolean           @default(false)
-  createdAt       DateTime          @default(now())
-  updatedAt       DateTime          @updatedAt
-
-  progress        UserProgress?
-  completed       CompletedResource[]
-  habits          UserHabit[]
-  savedResponses  SavedTutorResponse[]
-  ratings         TutorResponseRating[]
-  notices         Notice[]
+  id             String                @id @default(uuid())
+  username       String?               @unique
+  name           String
+  email          String                @unique
+  password       String
+  profilePicture String?
+  role           Role                  @default(USER)
+  isApproved     Boolean               @default(false)
+  createdAt      DateTime              @default(now())
+  updatedAt      DateTime              @updatedAt
+  completed      CompletedResource[]
+  notices        Notice[]
+  savedResponses SavedTutorResponse[]
+  ratings        TutorResponseRating[]
+  habits         UserHabit[]
+  progress       UserProgress?
 }
 
 model Notice {
   id          String   @id @default(uuid())
   title       String
   description String
-  category    String   @default("general")
-  priority    String   @default("medium")
   fileUrl     String?
   uploadedBy  String
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
+  category    String   @default("general")
+  priority    String   @default("medium")
   user        User     @relation(fields: [uploadedBy], references: [id])
 }
 
 model UserProgress {
-  id       String   @id @default(uuid())
-  user     User     @relation(fields: [userId], references: [id])
-  userId   String   @unique
-  xp       Int      @default(0)
-  streak   Int      @default(0)
+  id     String @id @default(uuid())
+  userId String @unique
+  xp     Int    @default(0)
+  streak Int    @default(0)
+  user   User   @relation(fields: [userId], references: [id])
 }
 
 model UserHabit {
-  id          String   @id @default(uuid())
-  user        User     @relation(fields: [userId], references: [id])
-  userId      String
-  title       String
-  targetDays  Int
-  completed   Boolean  @default(false)
-  createdAt   DateTime @default(now())
+  id         String   @id @default(uuid())
+  userId     String
+  title      String
+  targetDays Int
+  completed  Boolean  @default(false)
+  createdAt  DateTime @default(now())
+  user       User     @relation(fields: [userId], references: [id])
 }
 
 model Resource {
-  id        String               @id @default(uuid())
-  title     String
-  type      String               // e.g. "PDF", "Notes", "Question Set"
-  semester  String
-  subject   String
-  url       String
-  createdAt DateTime             @default(now())
-
+  id          String              @id @default(uuid())
+  title       String
+  type        String
+  semester    String
+  subject     String
+  url         String
+  createdAt   DateTime            @default(now())
   completedBy CompletedResource[]
 }
 
 model CompletedResource {
-  id         String    @id @default(uuid())
-  user       User      @relation(fields: [userId], references: [id])
-  userId     String
-  resource   Resource  @relation(fields: [resourceId], references: [id])
-  resourceId String
+  id          String   @id @default(uuid())
+  userId      String
+  resourceId  String
   completedAt DateTime @default(now())
+  resource    Resource @relation(fields: [resourceId], references: [id])
+  user        User     @relation(fields: [userId], references: [id])
 }
 
 model SavedTutorResponse {
-  id         String   @id @default(uuid())
-  user       User     @relation(fields: [userId], references: [id])
+  id         String                @id @default(uuid())
   userId     String
   topic      String
   mode       String
   response   String
-  flashcards String   // JSON stringified array
-  createdAt  DateTime @default(now())
+  flashcards String
+  createdAt  DateTime              @default(now())
+  user       User                  @relation(fields: [userId], references: [id])
   ratings    TutorResponseRating[]
 }
 
 model TutorResponseRating {
-  id         String   @id @default(uuid())
-  user       User     @relation(fields: [userId], references: [id])
+  id         String             @id @default(uuid())
   userId     String
-  response   SavedTutorResponse @relation(fields: [responseId], references: [id])
   responseId String
   rating     Int
   feedback   String?
-  createdAt  DateTime @default(now())
+  createdAt  DateTime           @default(now())
+  response   SavedTutorResponse @relation(fields: [responseId], references: [id])
+  user       User               @relation(fields: [userId], references: [id])
 }
 
 enum Role {

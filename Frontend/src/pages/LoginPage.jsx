@@ -17,7 +17,7 @@ import * as api from "../services/api";
 
 const LoginPage = () => {
   const [formData, setFormData] = useState({
-    email: "",
+    login: "",
     password: "",
   });
   const [showPassword, setShowPassword] = useState(false);
@@ -40,7 +40,7 @@ const LoginPage = () => {
     setLoading(true);
     setError("");
 
-    if (!formData.email || !formData.password) {
+    if (!formData.login || !formData.password) {
       setError("Please fill in all fields");
       setLoading(false);
       return;
@@ -99,15 +99,15 @@ const LoginPage = () => {
             )}
 
             <div className="space-y-2">
-              <Label htmlFor="email">Email</Label>
+              <Label htmlFor="login">Username or Email</Label>
               <div className="relative">
                 <Mail className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
                 <Input
-                  id="email"
-                  name="email"
-                  type="email"
-                  placeholder="Enter your email"
-                  value={formData.email}
+                  id="login"
+                  name="login"
+                  type="text"
+                  placeholder="Enter your username or email"
+                  value={formData.login}
                   onChange={handleChange}
                   className="pl-10"
                   required

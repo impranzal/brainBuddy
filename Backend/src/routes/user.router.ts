@@ -8,7 +8,7 @@ import {
   getHabitStats, getAllResources, getResourceById, getCompletedResources,
   getTopStreakUsers, logoutUser, getUserProfile, updateUserProfile,
   saveTutorResponse, rateTutorResponse, markSessionUnderstood, getFlashcardsByTopic,
-  getAllNoticesController, getNoticeByIdController
+  getAllNoticesController, getNoticeByIdController, proxyGemini
 } from '../controller/user.controller';
 
 import { apiLimiter } from '../middleware/ratelimit.middleware';
@@ -50,5 +50,6 @@ router.get('/honour-board', getTopStreakUsers);
 router.get('/profile', protect, getUserProfile);
 router.put('/profile', protect, upload.single('profilePicture'), updateUserProfile);
 router.get('/ai-tutor/flashcards', protect, restrictTo('user'), getFlashcardsByTopic);
+router.post('/gemini-proxy', proxyGemini);
 
 export default router;
