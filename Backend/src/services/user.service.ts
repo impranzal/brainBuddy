@@ -502,3 +502,58 @@ export const getFlashcardsByTopicService = async (topic: string) => {
   }
   return { flashcards };
 };
+
+// Quiz Progress Persistence
+export const getUserQuizProgressService = async (user: any) => {
+  const progress = await prisma.userQuizProgress.findUnique({ where: { userId: user.userId } });
+  return progress ? progress.quizData : null;
+};
+
+export const updateUserQuizProgressService = async (user: any, quizData: any) => {
+  const progress = await prisma.userQuizProgress.upsert({
+    where: { userId: user.userId },
+    update: { quizData },
+    create: { userId: user.userId, quizData },
+  });
+  return progress.quizData;
+};
+
+// Pet State Persistence
+export const getUserPetStateService = async (user: any) => {
+  const petState = await prisma.userPetState.findUnique({ where: { userId: user.userId } });
+  return petState;
+};
+
+export const updateUserPetStateService = async (user: any, petData: any) => {
+  const petState = await prisma.userPetState.upsert({
+    where: { userId: user.userId },
+    update: { ...petData },
+    create: { userId: user.userId, ...petData },
+  });
+  return petState;
+};
+
+// Achievements Persistence
+export const getUserAchievementsService = async (user: any) => {
+  return prisma.userAchievement.findMany({ where: { userId: user.userId } });
+};
+
+export const updateUserAchievementsService = async (user: any, achievements: any[]) => {
+  // Remove all and re-insert for simplicity
+  await prisma.userAchievement.deleteMany({ where: { userId: user.userId } });
+  if (achievements.length === 0) return [];
+  const created = await prisma.userAchievement.createMany({ data: achievements.map(a => ({ ...a, userId: user.userId })) });
+  return created;
+};
+
+// Badges Persistence
+export const getUserBadgesService = async (user: any) => {
+  return prisma.userBadge.findMany({ where: { userId: user.userId } });
+};
+
+export const updateUserBadgesService = async (user: any, badges: any[]) => {
+  await prisma.userBadge.deleteMany({ where: { userId: user.userId } });
+  if (badges.length === 0) return [];
+  const created = await prisma.userBadge.createMany({ data: badges.map(b => ({ ...b, userId: user.userId })) });
+  return created;
+};

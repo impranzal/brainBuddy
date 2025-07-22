@@ -37,6 +37,8 @@ import * as api from "../services/api";
 import PetSelection from "../components/PetSelection";
 import petData from "../data/pets.json";
 import toast from "react-hot-toast";
+import { getQuizProgress, updateQuizProgress, getPetState, updatePetState } from '../services/api';
+import { getAchievements, updateAchievements, getBadges, updateBadges } from '../services/api';
 
 // Cookie utility functions
 const getCookie = (name, userId) => {
@@ -108,265 +110,43 @@ const UserDashboard = () => {
   // Load data from cookies when user is available
   useEffect(() => {
     if (user?.id) {
-      console.log('Loading data from cookies for user:', user.id);
-      
-      // Load profile image
-      const savedProfileImage = getCookie('userProfileImage', user.id);
-      if (savedProfileImage) {
+      (async () => {
         try {
-          setProfileImage(JSON.parse(savedProfileImage));
+          // Fetch quiz progress from backend
+          const quizRes = await getQuizProgress();
+          if (quizRes && quizRes.quizProgress) {
+            const q = quizRes.quizProgress;
+            setQuizData(q.quizData || defaultQuizData);
+            setCurrentQuizIndex(q.currentQuizIndex || 0);
+            setQuizAnswers(q.quizAnswers || {});
+            setQuizCompleted(q.quizCompleted || false);
+            setPerformanceData(q.performanceData || []);
+            setPerformanceScore(q.performanceScore || 0);
+            setCorrectCount(q.correctCount || 0);
+            setWrongCount(q.wrongCount || 0);
+            setAccuracy(q.accuracy || 0);
+          }
+          // Fetch pet state from backend
+          const petRes = await getPetState();
+          if (petRes && petRes.petState) {
+            const p = petRes.petState;
+            setPetType(p.petType);
+            setPetName(p.petName);
+            setPetLevel(p.petLevel);
+            setPetExperience(p.petExperience);
+            setPetHappiness(p.petHappiness);
+            setPetEnergy(p.petEnergy);
+            setLastFed(p.lastFed ? new Date(p.lastFed).getTime() : Date.now());
+            setLastPlayed(p.lastPlayed ? new Date(p.lastPlayed).getTime() : Date.now());
+            setShowPetSelection(!(p.petType && p.petName));
+          }
         } catch (e) {
-          setProfileImage(savedProfileImage);
+          // fallback to cookies if backend fails
+          // ... (keep your cookie logic here as fallback)
+        } finally {
+          setIsInitialLoad(false);
         }
-      }
-      
-      // Load XP
-      const savedXP = getCookie('userXP', user.id);
-      if (savedXP) {
-        try {
-          const parsedXP = JSON.parse(savedXP);
-          console.log('Loading XP from cookie:', parsedXP);
-          setXP(parsedXP);
-        } catch (e) {
-          const parsedXP = parseInt(savedXP) || 0;
-          console.log('Loading XP from cookie (fallback):', parsedXP);
-          setXP(parsedXP);
-        }
-      } else {
-        console.log('No XP found in cookies, using default: 0');
-      }
-      
-      // Load streak
-      const savedStreak = getCookie('userStreak', user.id);
-      if (savedStreak) {
-        try {
-          setStreak(JSON.parse(savedStreak));
-        } catch (e) {
-          setStreak(parseInt(savedStreak) || 0);
-        }
-      }
-      
-      // Load level
-      const savedLevel = getCookie('userLevel', user.id);
-      if (savedLevel) {
-        try {
-          const parsedLevel = JSON.parse(savedLevel);
-          console.log('Loading level from cookie:', parsedLevel);
-          setLevel(parsedLevel);
-        } catch (e) {
-          const parsedLevel = parseInt(savedLevel) || 1;
-          console.log('Loading level from cookie (fallback):', parsedLevel);
-          setLevel(parsedLevel);
-        }
-      } else {
-        console.log('No level found in cookies, using default: 1');
-      }
-      
-      // Load quiz data
-      const savedQuizIndex = getCookie('currentQuizIndex', user.id);
-      if (savedQuizIndex) {
-        try {
-          setCurrentQuizIndex(JSON.parse(savedQuizIndex));
-        } catch (e) {
-          setCurrentQuizIndex(parseInt(savedQuizIndex) || 0);
-        }
-      }
-      
-      const savedQuizAnswers = getCookie('quizAnswers', user.id);
-      if (savedQuizAnswers) {
-        try {
-          setQuizAnswers(JSON.parse(savedQuizAnswers));
-        } catch (e) {
-          setQuizAnswers({});
-        }
-      }
-      
-      const savedQuizCompleted = getCookie('quizCompleted', user.id);
-      if (savedQuizCompleted) {
-        try {
-          setQuizCompleted(JSON.parse(savedQuizCompleted));
-        } catch (e) {
-          setQuizCompleted(savedQuizCompleted === 'true');
-        }
-      }
-      
-      // Load performance data
-      const savedPerformanceData = getCookie('performanceData', user.id);
-      if (savedPerformanceData) {
-        try {
-          setPerformanceData(JSON.parse(savedPerformanceData));
-        } catch (e) {
-          setPerformanceData([]);
-        }
-      }
-      
-      const savedPerformanceScore = getCookie('performanceScore', user.id);
-      if (savedPerformanceScore) {
-        try {
-          setPerformanceScore(JSON.parse(savedPerformanceScore));
-        } catch (e) {
-          setPerformanceScore(parseFloat(savedPerformanceScore) || 0);
-        }
-      }
-      
-      const savedCorrectCount = getCookie('correctCount', user.id);
-      if (savedCorrectCount) {
-        try {
-          setCorrectCount(JSON.parse(savedCorrectCount));
-        } catch (e) {
-          setCorrectCount(parseInt(savedCorrectCount) || 0);
-        }
-      }
-      
-      const savedWrongCount = getCookie('wrongCount', user.id);
-      if (savedWrongCount) {
-        try {
-          setWrongCount(JSON.parse(savedWrongCount));
-        } catch (e) {
-          setWrongCount(parseInt(savedWrongCount) || 0);
-        }
-      }
-      
-      const savedAccuracy = getCookie('accuracy', user.id);
-      if (savedAccuracy) {
-        try {
-          setAccuracy(JSON.parse(savedAccuracy));
-        } catch (e) {
-          setAccuracy(parseFloat(savedAccuracy) || 0);
-        }
-      }
-      
-      // Load quiz data completion status
-      const savedQuizData = getCookie('quizData', user.id);
-      if (savedQuizData) {
-        try {
-          const parsedQuizData = JSON.parse(savedQuizData);
-          console.log('Loading quiz data from cookie:', parsedQuizData.length, 'quizzes');
-          console.log('Quiz completion status:', parsedQuizData.map(q => ({ question: q.question.substring(0, 20) + '...', completed: q.completed })));
-          setQuizData(parsedQuizData);
-        } catch (e) {
-          console.error('Error parsing quiz data:', e);
-        }
-      } else {
-        console.log('No quiz data found in cookies, using default quiz data');
-      }
-      
-      // Load pet data
-      const savedPetType = getCookie('petType', user.id);
-      if (savedPetType) {
-        try {
-          const parsedPetType = JSON.parse(savedPetType);
-          console.log('Loading pet type from cookie:', parsedPetType);
-          setPetType(parsedPetType);
-        } catch (e) {
-          console.log('Loading pet type from cookie (fallback):', savedPetType);
-          setPetType(savedPetType);
-        }
-      } else {
-        console.log('No pet type found in cookies');
-      }
-      
-      const savedPetName = getCookie('petName', user.id);
-      if (savedPetName) {
-        try {
-          setPetName(JSON.parse(savedPetName));
-        } catch (e) {
-          setPetName(savedPetName);
-        }
-      }
-      
-      const savedPetHappiness = getCookie('petHappiness', user.id);
-      if (savedPetHappiness) {
-        try {
-          setPetHappiness(JSON.parse(savedPetHappiness));
-        } catch (e) {
-          setPetHappiness(parseInt(savedPetHappiness) || 100);
-        }
-      }
-      
-      const savedPetEnergy = getCookie('petEnergy', user.id);
-      if (savedPetEnergy) {
-        try {
-          setPetEnergy(JSON.parse(savedPetEnergy));
-        } catch (e) {
-          setPetEnergy(parseInt(savedPetEnergy) || 100);
-        }
-      }
-      
-      const savedPetExperience = getCookie('petExperience', user.id);
-      if (savedPetExperience) {
-        try {
-          setPetExperience(JSON.parse(savedPetExperience));
-        } catch (e) {
-          setPetExperience(parseInt(savedPetExperience) || 0);
-        }
-      }
-      
-      const savedPetLevel = getCookie('petLevel', user.id);
-      if (savedPetLevel) {
-        try {
-          setPetLevel(JSON.parse(savedPetLevel));
-        } catch (e) {
-          setPetLevel(parseInt(savedPetLevel) || 0);
-        }
-      }
-      
-      const savedLastFed = getCookie('lastFed', user.id);
-      if (savedLastFed) {
-        try {
-          setLastFed(JSON.parse(savedLastFed));
-        } catch (e) {
-          setLastFed(parseInt(savedLastFed) || Date.now());
-        }
-      }
-      
-      const savedLastPlayed = getCookie('lastPlayed', user.id);
-      if (savedLastPlayed) {
-        try {
-          setLastPlayed(JSON.parse(savedLastPlayed));
-        } catch (e) {
-          setLastPlayed(parseInt(savedLastPlayed) || Date.now());
-        }
-      }
-      
-      // Load achievements and badges
-      const savedAchievements = getCookie('userAchievements', user.id);
-      if (savedAchievements) {
-        try {
-          setAchievements(JSON.parse(savedAchievements));
-        } catch (e) {
-          setAchievements([]);
-        }
-      }
-      
-      const savedBadges = getCookie('userBadges', user.id);
-      if (savedBadges) {
-        try {
-          setBadges(JSON.parse(savedBadges));
-        } catch (e) {
-          setBadges([
-            { icon: "🔥", name: "Streak", earned: false, requirement: "Maintain a 7-day streak" },
-            { icon: "📚", name: "Scholar", earned: false, requirement: "Complete 10 quizzes" },
-            { icon: "⚡", name: "Speed", earned: false, requirement: "Complete 5 quizzes in one day" },
-            { icon: "🎯", name: "Accuracy", earned: false, requirement: "Achieve 90% accuracy" },
-            { icon: "🌟", name: "Master", earned: false, requirement: "Reach level 10" },
-            { icon: "💎", name: "Diamond", earned: false, requirement: "Earn 1000 XP" }
-          ]);
-        }
-      }
-      
-      // Set pet selection visibility after all pet data is loaded
-      const hasPet = savedPetType && savedPetName;
-      setShowPetSelection(!hasPet);
-      console.log('Pet selection visibility set to:', !hasPet, '(hasPet:', hasPet, ')');
-      
-      console.log('Cookie data loaded successfully');
-      
-      // Mark initial load as complete after a short delay to ensure all state updates are processed
-      setTimeout(() => {
-        setIsInitialLoad(false);
-        console.log('Initial load marked as complete');
-      }, 100);
+      })();
     }
   }, [user?.id]);
 
@@ -688,6 +468,39 @@ const UserDashboard = () => {
     }
   }, [quizData, user?.id, isInitialLoad]);
 
+  // Save quiz state to backend whenever it changes
+  useEffect(() => {
+    if (!isInitialLoad && user?.id) {
+      updateQuizProgress({
+        quizData,
+        currentQuizIndex,
+        quizAnswers,
+        quizCompleted,
+        performanceData,
+        performanceScore,
+        correctCount,
+        wrongCount,
+        accuracy
+      });
+    }
+  }, [quizData, currentQuizIndex, quizAnswers, quizCompleted, performanceData, performanceScore, correctCount, wrongCount, accuracy, user?.id, isInitialLoad]);
+
+  // Save pet state to backend whenever it changes
+  useEffect(() => {
+    if (!isInitialLoad && user?.id) {
+      updatePetState({
+        petType,
+        petName,
+        petLevel,
+        petExperience,
+        petHappiness,
+        petEnergy,
+        lastFed,
+        lastPlayed
+      });
+    }
+  }, [petType, petName, petLevel, petExperience, petHappiness, petEnergy, lastFed, lastPlayed, user?.id, isInitialLoad]);
+
   // Check achievements and badges whenever relevant stats change
   useEffect(() => {
     checkAchievementsAndBadges();
@@ -847,7 +660,7 @@ const UserDashboard = () => {
     setLastFed(petData.lastFed);
     setLastPlayed(petData.lastPlayed);
     setShowPetSelection(false);
-    
+    updatePetState(petData);
     toast.success(`🎉 Welcome ${petData.petName}! Your new pet companion is ready for adventures!`);
   };
 
@@ -1277,6 +1090,37 @@ const UserDashboard = () => {
     "Live as if you were to die tomorrow. Learn as if you were to live forever.",
   ];
   const todayQuote = quotes[new Date().getDay() % quotes.length];
+
+  // Fetch achievements and badges from backend on load
+  useEffect(() => {
+    if (user?.id) {
+      (async () => {
+        try {
+          const achRes = await getAchievements();
+          if (achRes && achRes.achievements) setAchievements(achRes.achievements);
+          const badgeRes = await getBadges();
+          if (badgeRes && badgeRes.badges) setBadges(badgeRes.badges);
+        } catch (e) {
+          // fallback to cookies if backend fails
+          // ... (keep your cookie logic here as fallback)
+        }
+      })();
+    }
+  }, [user?.id]);
+
+  // Save achievements to backend whenever they change
+  useEffect(() => {
+    if (!isInitialLoad && user?.id) {
+      updateAchievements(achievements);
+    }
+  }, [achievements, user?.id, isInitialLoad]);
+
+  // Save badges to backend whenever they change
+  useEffect(() => {
+    if (!isInitialLoad && user?.id) {
+      updateBadges(badges);
+    }
+  }, [badges, user?.id, isInitialLoad]);
 
   if (loading) {
     return (

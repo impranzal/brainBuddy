@@ -140,6 +140,49 @@ export async function getHabitStats() {
   return apiFetch('/user/habit');
 }
 
+// --- Quiz Progress ---
+export async function getQuizProgress() {
+  return apiFetch('/user/quiz-progress');
+}
+export async function updateQuizProgress(quizData) {
+  return apiFetch('/user/quiz-progress', {
+    method: 'PUT',
+    body: JSON.stringify({ quizData }),
+  });
+}
+
+// --- Pet State ---
+export async function getPetState() {
+  return apiFetch('/user/pet-state');
+}
+export async function updatePetState(petData) {
+  return apiFetch('/user/pet-state', {
+    method: 'PUT',
+    body: JSON.stringify(petData),
+  });
+}
+
+// --- Achievements ---
+export async function getAchievements() {
+  return apiFetch('/user/achievements');
+}
+export async function updateAchievements(achievements) {
+  return apiFetch('/user/achievements', {
+    method: 'PUT',
+    body: JSON.stringify({ achievements }),
+  });
+}
+// --- Badges ---
+export async function getBadges() {
+  return apiFetch('/user/badges');
+}
+export async function updateBadges(badges) {
+  return apiFetch('/user/badges', {
+    method: 'PUT',
+    body: JSON.stringify({ badges }),
+  });
+}
+
 // --- Admin Endpoints (examples) ---
 export async function getAllUsers() {
   return apiFetch('/admin/users');

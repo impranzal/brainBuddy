@@ -8,7 +8,9 @@ import {
   getHabitStats, getAllResources, getResourceById, getCompletedResources,
   getTopStreakUsers, logoutUser, getUserProfile, updateUserProfile,
   saveTutorResponse, rateTutorResponse, markSessionUnderstood, getFlashcardsByTopic,
-  getAllNoticesController, getNoticeByIdController, proxyGemini
+  getAllNoticesController, getNoticeByIdController, proxyGemini,
+  getUserQuizProgress, updateUserQuizProgress, getUserPetState, updateUserPetState,
+  getUserAchievements, updateUserAchievements, getUserBadges, updateUserBadges
 } from '../controller/user.controller';
 
 import { apiLimiter } from '../middleware/ratelimit.middleware';
@@ -51,5 +53,13 @@ router.get('/profile', protect, getUserProfile);
 router.put('/profile', protect, upload.single('profilePicture'), updateUserProfile);
 router.get('/ai-tutor/flashcards', protect, restrictTo('user'), getFlashcardsByTopic);
 router.post('/gemini-proxy', proxyGemini);
+router.get('/quiz-progress', getUserQuizProgress);
+router.put('/quiz-progress', updateUserQuizProgress);
+router.get('/pet-state', getUserPetState);
+router.put('/pet-state', updateUserPetState);
+router.get('/achievements', getUserAchievements);
+router.put('/achievements', updateUserAchievements);
+router.get('/badges', getUserBadges);
+router.put('/badges', updateUserBadges);
 
 export default router;

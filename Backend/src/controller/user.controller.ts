@@ -283,3 +283,75 @@ export const proxyGemini = async (req: Request, res: Response, next: NextFunctio
     next(new AppError(error.message || 'Failed to get Gemini response', 500));
   }
 };
+
+export const getUserQuizProgress = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const progress = await userService.getUserQuizProgressService(req.user);
+    res.status(200).json({ quizProgress: progress });
+  } catch (error: any) {
+    next(new AppError(error.message || 'Failed to fetch quiz progress', 500));
+  }
+};
+
+export const updateUserQuizProgress = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const progress = await userService.updateUserQuizProgressService(req.user, req.body.quizData);
+    res.status(200).json({ quizProgress: progress });
+  } catch (error: any) {
+    next(new AppError(error.message || 'Failed to update quiz progress', 500));
+  }
+};
+
+export const getUserPetState = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const petState = await userService.getUserPetStateService(req.user);
+    res.status(200).json({ petState });
+  } catch (error: any) {
+    next(new AppError(error.message || 'Failed to fetch pet state', 500));
+  }
+};
+
+export const updateUserPetState = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const petState = await userService.updateUserPetStateService(req.user, req.body);
+    res.status(200).json({ petState });
+  } catch (error: any) {
+    next(new AppError(error.message || 'Failed to update pet state', 500));
+  }
+};
+
+export const getUserAchievements = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const achievements = await userService.getUserAchievementsService(req.user);
+    res.status(200).json({ achievements });
+  } catch (error: any) {
+    next(new AppError(error.message || 'Failed to fetch achievements', 500));
+  }
+};
+
+export const updateUserAchievements = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const achievements = await userService.updateUserAchievementsService(req.user, req.body.achievements);
+    res.status(200).json({ achievements });
+  } catch (error: any) {
+    next(new AppError(error.message || 'Failed to update achievements', 500));
+  }
+};
+
+export const getUserBadges = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const badges = await userService.getUserBadgesService(req.user);
+    res.status(200).json({ badges });
+  } catch (error: any) {
+    next(new AppError(error.message || 'Failed to fetch badges', 500));
+  }
+};
+
+export const updateUserBadges = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const badges = await userService.updateUserBadgesService(req.user, req.body.badges);
+    res.status(200).json({ badges });
+  } catch (error: any) {
+    next(new AppError(error.message || 'Failed to update badges', 500));
+  }
+};
