@@ -27,6 +27,8 @@ BrainBuddy is a full-stack, AI-powered learning platform designed to make educat
 - **AI Tutor:** Interactive learning with multiple modes (Quick, Deep, Step-by-step).
 - **AI Student Mode:** Users teach topics to AI and receive feedback.
 - **Gamification:** XP system, level progression, achievements, badges, and a virtual pet.
+- **Habit Tracking:** Build and track learning habits with dedicated pages and sections.
+- **Tech News Feed:** Stay updated with the latest technology news.
 - **Dashboards:** Personalized dashboards for students and admins.
 - **Resource Library:** Upload, list, and manage learning resources.
 - **Honor Board:** Leaderboard with top students and streaks.
@@ -50,22 +52,31 @@ brainBuddy/
 ├── Frontend/
 │   ├── src/
 │   │   ├── components/      # Reusable UI components
-│   │   ├── contexts/        # React Context providers
-│   │   ├── pages/           # Application pages
-│   │   └── App.jsx          # Main app
-│   ├── public/              # Static assets
-│   ├── package.json         # Frontend dependencies
-│   └── README.md            # Frontend docs
+│   │   │   └── ui/         # Extensive Shadcn/UI-based components
+│   │   ├── wrapppers/      # Layout and route wrappers (note: typo, should be 'wrappers')
+│   │   ├── contexts/       # React Context providers
+│   │   ├── pages/          # Application pages (Dashboard, AI Tutor, Habit, Tech News, etc.)
+│   │   ├── data/           # Static data (e.g., pets)
+│   │   ├── hooks/          # Custom React hooks
+│   │   ├── lib/            # Utility functions
+│   │   ├── config/         # API config
+│   │   └── App.jsx         # Main app
+│   ├── public/             # Static assets
+│   ├── package.json        # Frontend dependencies
+│   └── README.md           # Frontend docs
 ├── Backend/
 │   ├── src/
-│   │   ├── controller/      # Route controllers
-│   │   ├── middleware/      # Express middlewares
-│   │   ├── routes/          # API routes
-│   │   ├── services/        # Business logic
-│   │   └── utils/           # Utility functions
-│   ├── prisma/              # Prisma schema & migrations
-│   ├── package.json         # Backend dependencies
-│   └── README.md            # Backend docs (add if needed)
+│   │   ├── controller/     # Route controllers
+│   │   ├── middleware/     # Express middlewares (auth, error, rate limit, upload, validation)
+│   │   ├── routes/         # API routes
+│   │   ├── services/       # Business logic
+│   │   ├── utils/          # Utility functions (validators, config, cloudinary, gemini, etc.)
+│   │   ├── jwt/            # JWT token utilities
+│   │   ├── connect/        # Prisma connection
+│   │   └── types/          # Type definitions
+│   ├── prisma/             # Prisma schema & migrations
+│   ├── package.json        # Backend dependencies
+│   └── README.md           # Backend docs (add if needed)
 ```
 
 ---
@@ -127,7 +138,9 @@ pnpm run dev   # or npm run dev
 
 - Built with React 18, Vite, and Tailwind CSS.
 - Modern UI with Shadcn/UI and Lucide icons.
-- Features include authentication, dashboards, AI tutor, gamification, resource management, and more.
+- Features include authentication, dashboards, AI tutor, gamification, resource management, habit tracking, tech news, and more.
+- Modular and reusable UI system with 40+ components in `src/components/ui/`.
+- Layout and route wrappers in `src/wrapppers/` for flexible page structure.
 - All API calls are managed in `src/services/api.js`.
 - Fully responsive and customizable.
 
@@ -137,7 +150,8 @@ pnpm run dev   # or npm run dev
 
 - Node.js + Express REST API.
 - Prisma ORM for database management.
-- JWT-based authentication and role-based access control.
+- JWT-based authentication and role-based access control (see `src/jwt/`).
+- Centralized Prisma connection management (see `src/connect/`).
 - File uploads via Multer and Cloudinary.
 - Rate limiting, CORS, and error handling middleware.
 - API documentation with Swagger.
@@ -206,4 +220,4 @@ You can log in using either **username or email** for the test accounts below:
 
 ## Support
 
-- For questions, see `
+For questions or support, please open an issue on the [GitHub repository](https://github.com/impranzal/brainBuddy) or contact the project maintainer.
