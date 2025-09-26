@@ -1,5 +1,17 @@
 # BrainBuddy - AI-Powered Learning Platform
 
+
+
+---
+
+
+## Contributions
+BHIM RAJ BHANDARI
+PRANJAL RIMAL
+AMIT NIRAULA
+
+---
+
 ## Overview
 
 BrainBuddy is a full-stack, AI-powered learning platform designed to make education engaging and effective. It combines interactive AI tutoring, gamified learning, and robust user management for both students and administrators.
